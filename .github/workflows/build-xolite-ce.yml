@@ -208,8 +208,11 @@ jobs:
           echo "${GPG_PRIVATE_KEY}" | gpg --batch --import
           # Allow loopback passphrase — required for non-TTY environments
           mkdir -p ~/.gnupg
+          chmod 700 ~/.gnupg
           echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
           gpgconf --kill gpg-agent
+          gpgconf --launch gpg-agent
+          sleep 1
           gpg --list-secret-keys
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
@@ -229,14 +232,6 @@ jobs:
     
           echo "▶ rpmmacros written:"
           cat ~/.rpmmacros
-    
-      - name: Restart gpg-agent with loopback support
-        run: |
-          gpgconf --kill gpg-agent
-          sleep 1
-          gpg-agent --daemon --allow-loopback-pinentry
-          sleep 1
-      
       
       # ── 12. Sign RPM ──────────────────────────────────────────────────────
       - name: Sign community RPM
