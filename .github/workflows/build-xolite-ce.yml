@@ -202,14 +202,18 @@ jobs:
           echo "▶ Built RPM: ${NEW_RPM}"
           rpm -qip "${NEW_RPM}"
 
-      # ── 11. Import GPG key and configure rpmmacros ────────────────────────
+      # ── 11. Import GPG key and configure for CI ───────────────────────────
       - name: Import GPG signing key
         run: |
           echo "${GPG_PRIVATE_KEY}" | gpg --batch --import
+          # Allow loopback passphrase — required for non-TTY environments
+          mkdir -p ~/.gnupg
+          echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
+          gpgconf --kill gpg-agent
           gpg --list-secret-keys
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-
+      
       - name: Configure rpmmacros
         run: |
           cat > ~/.rpmmacros <<EOF
@@ -217,20 +221,20 @@ jobs:
           %_gpg_name XCP-ng Community Edition
           %_gpgbin /usr/bin/gpg2
           %__gpg_sign_cmd %{__gpg} gpg --batch --no-verbose --no-armor \
-            --passphrase-fd 3 --no-secmem-warning \
+            --pinentry-mode loopback \
+            --passphrase "" \
+            --no-secmem-warning \
             -u "%{_gpg_name}" -sbo %{__signature_filename} \
             --digest-algo sha256 %{__plaintext_filename}
           EOF
-
+      
       # ── 12. Sign RPM ──────────────────────────────────────────────────────
-      - name: Sign community RPM
+      - name: Sign RPM
         run: |
-          echo "${GPG_PASSPHRASE}" | rpmsign --addsign \
+          rpmsign --addsign \
             --define "_gpg_name XCP-ng Community Edition" \
             "${new_rpm}"
           echo "▶ RPM signed: ${new_rpm}"
-        env:
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
       # ── 13. Verify RPM signature ──────────────────────────────────────────
       - name: Verify RPM signature
