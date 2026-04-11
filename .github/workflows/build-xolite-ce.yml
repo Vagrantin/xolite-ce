@@ -239,11 +239,7 @@ jobs:
           rpmsign --addsign \
             --define "_gpg_name XCP-ng Community Edition" \
             "${new_rpm}"
-      
-          # Confirm gpg header is actually present in the RPM
-          rpm -qp --qf '%{SIGPGP:pgpsig}\n' "${new_rpm}" | grep -q 'Key ID' \
-            || (echo "❌ RPM header shows no GPG signature"; exit 1)
-          echo "✅ RPM signed successfully"
+          echo "RPM signed: ${new_rpm}"
 
       # ── 13. Verify RPM signature ──────────────────────────────────────────
       - name: Verify RPM signature
