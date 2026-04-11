@@ -213,28 +213,42 @@ jobs:
           gpg --list-secret-keys
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-      
+            
       - name: Configure rpmmacros
         run: |
+          GPG_KEY_ID=$(gpg --list-secret-keys --with-colons \
+            | awk -F: '/^sec/{print $5}' | head -1)
+          echo "▶ Using key ID: ${GPG_KEY_ID}"
+    
           cat > ~/.rpmmacros <<EOF
           %_signature gpg
           %_gpg_name XCP-ng Community Edition
           %_gpgbin /usr/bin/gpg2
-          %__gpg_sign_cmd %{__gpg} gpg --batch --no-verbose --no-armor \
-            --pinentry-mode loopback \
-            --passphrase "" \
-            --no-secmem-warning \
-            -u "%{_gpg_name}" -sbo %{__signature_filename} \
-            --digest-algo sha256 %{__plaintext_filename}
+          %__gpg_sign_cmd %{__gpg} gpg --batch --no-verbose --no-armor --no-secmem-warning --pinentry-mode loopback --passphrase '' -u "%{_gpg_name}" -sbo %{__signature_filename} --digest-algo sha256 %{__plaintext_filename}
           EOF
+    
+          echo "▶ rpmmacros written:"
+          cat ~/.rpmmacros
+    
+      - name: Restart gpg-agent with loopback support
+        run: |
+          gpgconf --kill gpg-agent
+          sleep 1
+          gpg-agent --daemon --allow-loopback-pinentry
+          sleep 1
+      
       
       # ── 12. Sign RPM ──────────────────────────────────────────────────────
-      - name: Sign RPM
+      - name: Sign community RPM
         run: |
           rpmsign --addsign \
             --define "_gpg_name XCP-ng Community Edition" \
             "${new_rpm}"
-          echo "▶ RPM signed: ${new_rpm}"
+      
+          # Confirm gpg header is actually present in the RPM
+          rpm -qp --qf '%{SIGPGP:pgpsig}\n' "${new_rpm}" | grep -q 'Key ID' \
+            || (echo "❌ RPM header shows no GPG signature"; exit 1)
+          echo "✅ RPM signed successfully"
 
       # ── 13. Verify RPM signature ──────────────────────────────────────────
       - name: Verify RPM signature
