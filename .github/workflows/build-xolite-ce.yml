@@ -247,7 +247,7 @@ jobs:
           rpm --import "$GITHUB_WORKSPACE/RPM-GPG-KEY-xcp-ng-ce"
           echo "── RPM signature check ──────────────────────────────────────"
           rpm --checksig "${new_rpm}"
-          rpm --checksig "${new_rpm}" | grep -q "gpg" \
+          rpm --checksig "${new_rpm}" | grep -q "digests signatures OK" \
             || (echo "❌ GPG signature missing from RPM"; exit 1)
           echo "✅ RPM signature verified"
 
