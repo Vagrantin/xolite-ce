@@ -24,9 +24,7 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y \
-            rpm rpm-sign rpmsign \
-            rpm2cpio cpio \
-            gnupg2
+            rpm rpm2cpio gnupg2\
 
       # ── 2. Clone vatesfr/xen-orchestra at latest xo-lite-v* tag ─────────
       - name: Detect latest xo-lite tag
