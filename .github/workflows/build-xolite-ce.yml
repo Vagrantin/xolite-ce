@@ -1,0 +1,275 @@
+name: Build and Sign XO Lite Community RPM
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release tag (e.g. xo-lite-ce-20260411)'
+        required: true
+
+jobs:
+  build-rpm:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    timeout-minutes: 60
+
+    steps:
+      # ── 0. Checkout xolite-ce (patch, spec, public key live here) ────────
+      - name: Checkout xolite-ce
+        uses: actions/checkout@v4
+
+      # ── 1. Install system dependencies ──────────────────────────────────
+      - name: Install system tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y \
+            rpm rpm-sign rpmsign \
+            rpm2cpio cpio \
+            gnupg2
+
+      # ── 2. Clone vatesfr/xen-orchestra at latest xo-lite-v* tag ─────────
+      - name: Detect latest xo-lite tag
+        id: xo-tag
+        run: |
+          LATEST_TAG=$(git -c 'versionsort.suffix=-' \
+            ls-remote --tags --sort=v:refname \
+            https://github.com/vatesfr/xen-orchestra.git \
+            'refs/tags/xo-lite-v*' \
+            | tail -1 | sed 's|.*refs/tags/||')
+          echo "tag=${LATEST_TAG}" >> $GITHUB_OUTPUT
+          echo "▶ Latest xo-lite tag: ${LATEST_TAG}"
+
+      - name: Clone xen-orchestra at latest tag
+        run: |
+          git clone --depth 1 \
+            --branch "${{ steps.xo-tag.outputs.tag }}" \
+            https://github.com/vatesfr/xen-orchestra.git
+          echo "▶ Cloned at tag: ${{ steps.xo-tag.outputs.tag }}"
+
+      # ── 3. Detect XO Lite version from package.json ──────────────────────
+      - name: Detect XO Lite version
+        id: xo-version
+        run: |
+          VERSION=$(jq -r '.version' \
+            xen-orchestra/@xen-orchestra/lite/package.json)
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "▶ XO Lite version: ${VERSION}"
+
+      # ── 4. Apply community patch ─────────────────────────────────────────
+      - name: Apply community patch
+        run: |
+          cd xen-orchestra
+          git apply "$GITHUB_WORKSPACE/patches/community-xoa-deploy.patch"
+          echo "▶ Patch applied. Modified files:"
+          git diff --name-only HEAD
+
+      # ── 5. Verify patch in source before building ────────────────────────
+      - name: Verify patch in source
+        run: |
+          echo "── Checking lite.xen-orchestra.com try/catch is GONE ───────────────────"
+          if grep -r 'lite\.xen-orchestra\.com' \
+              xen-orchestra/@xen-orchestra/lite/scripts/; then
+            echo "❌ FAIL: lite.xen-orchestra.com still present in source"
+            exit 1
+          else
+            echo "✅ PASS: lite.xen-orchestra removed"
+          fi
+
+          echo "── Checking community URL is PRESENT ───────────────────────"
+          if grep -r '192\.168\.0\.1' \
+              xen-orchestra/@xen-orchestra/lite/src/; then
+            echo "✅ PASS: community URL found in source"
+          else
+            echo "❌ FAIL: community URL not found in source"
+            exit 1
+          fi
+
+      # ── 6. Set up Node.js and Yarn ───────────────────────────────────────
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.3'
+          cache: 'yarn'
+          cache-dependency-path: xen-orchestra/yarn.lock
+
+      - name: Enable Corepack
+        run: |
+          corepack enable
+          cd xen-orchestra
+          yarn --version
+
+      # ── 7. Install dependencies and build ────────────────────────────────
+      - name: Install dependencies
+        working-directory: xen-orchestra
+        run: yarn install --frozen-lockfile
+
+      - name: Build XO Lite
+        working-directory: xen-orchestra
+        run: TURBO_TELEMETRY_DISABLED=1 yarn build:xo-lite
+
+      # ── 8. Verify build output ───────────────────────────────────────────
+      - name: Verify build output
+        run: |
+          DIST="xen-orchestra/@xen-orchestra/lite/dist"
+          echo "▶ Build output:"
+          ls -lh "${DIST}/"
+          test -f "${DIST}/index.html" || (echo "❌ index.html missing"; exit 1)
+          test -d "${DIST}/assets"     || (echo "❌ assets/ missing";    exit 1)
+
+          echo "── Checking xoa.io is GONE ─────────────────────────────────"
+          if grep -Irl 'xoa\.io' "${DIST}"; then
+            echo "❌ FAIL: xoa.io still in built output"; exit 1
+          else
+            echo "✅ PASS: xoa.io not found in dist"
+          fi
+
+          echo "── Checking lite.xen-orchestra.com is GONE ─────────────────"
+          if grep -Irl 'lite\.xen-orchestra\.com' "${DIST}"; then
+            echo "❌ FAIL: lite.xen-orchestra.com still in built output"; exit 1
+          else
+            echo "✅ PASS: lite.xen-orchestra.com not found in dist"
+          fi
+
+          echo "── Checking community URL is PRESENT ───────────────────────"
+          if grep -Irl '192\.168\.0\.1' "${DIST}"; then
+            echo "✅ PASS: community URL found in dist"
+          else
+            echo "❌ FAIL: community URL not found in dist"; exit 1
+          fi
+          echo "✅ Build output verified"
+
+      # ── 9. Package tarball for rpmbuild ──────────────────────────────────
+      - name: Inspect source tree before packaging
+        run: |
+          PKG="xen-orchestra/@xen-orchestra/lite"
+          echo "── scripts/ ─────────────────────────────────────────────────"
+          ls -la "${PKG}/scripts/" 2>/dev/null || echo "(no scripts/ dir)"
+          echo "── Monorepo root (license files) ────────────────────────────"
+          ls xen-orchestra/ | grep -iE 'license|changelog'
+          echo "── Dist output ──────────────────────────────────────────────"
+          ls -lh "${PKG}/dist/"
+
+      - name: Package tarball for rpmbuild
+        run: |
+          VERSION="${{ steps.xo-version.outputs.version }}"
+          PKG="xen-orchestra/@xen-orchestra/lite"
+          REPO="xen-orchestra"
+          TARBALL_DIR="xo-lite-${VERSION}"
+
+          mkdir "${TARBALL_DIR}"
+          cp -a "${PKG}/dist/." "${TARBALL_DIR}/"
+          cp "${PKG}/CHANGELOG.md" "${TARBALL_DIR}/"
+          cp "${PKG}/scripts/xolite-loader.html" "${TARBALL_DIR}/xolite.html"
+
+          if [ -f "${REPO}/LICENSE" ]; then
+            cp "${REPO}/LICENSE" "${TARBALL_DIR}/LICENSE"
+          elif [ -f "${REPO}/LICENSE.md" ]; then
+            cp "${REPO}/LICENSE.md" "${TARBALL_DIR}/LICENSE"
+          else
+            echo "❌ No LICENSE file found"; exit 1
+          fi
+
+          echo "▶ Tarball contents:"
+          ls -lh "${TARBALL_DIR}/"
+
+          for f in index.html assets favicon.svg manifest.webmanifest \
+                    xolite.html build.json LICENSE CHANGELOG.md; do
+            test -e "${TARBALL_DIR}/${f}" \
+              || (echo "❌ Missing: ${TARBALL_DIR}/${f}"; exit 1)
+          done
+          echo "✅ All expected files present"
+
+          tar -czf "xo-lite-${VERSION}.tar.gz" "${TARBALL_DIR}/"
+
+      # ── 10. Build RPM ─────────────────────────────────────────────────────
+      - name: Set up rpmbuild directories
+        run: mkdir -p ~/rpmbuild/{SOURCES,SPECS,RPMS,SRPMS,BUILD,BUILDROOT}
+
+      - name: Copy sources and spec
+        run: |
+          VERSION="${{ steps.xo-version.outputs.version }}"
+          cp "xo-lite-${VERSION}.tar.gz" ~/rpmbuild/SOURCES/
+          sed "s/^Version:.*/Version: ${VERSION}/" \
+            "$GITHUB_WORKSPACE/SPECS/xo-lite-community.spec" \
+            > ~/rpmbuild/SPECS/xo-lite-community.spec
+
+      - name: Build RPM
+        run: |
+          rpmbuild -ba ~/rpmbuild/SPECS/xo-lite-community.spec \
+            --define "_topdir $HOME/rpmbuild"
+
+          NEW_RPM=$(find ~/rpmbuild/RPMS/noarch/ -name "xo-lite*.rpm" | head -1)
+          echo "new_rpm=${NEW_RPM}" >> $GITHUB_ENV
+          echo "▶ Built RPM: ${NEW_RPM}"
+          rpm -qip "${NEW_RPM}"
+
+      # ── 11. Import GPG key and configure rpmmacros ────────────────────────
+      - name: Import GPG signing key
+        run: |
+          echo "${GPG_PRIVATE_KEY}" | gpg --batch --import
+          gpg --list-secret-keys
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+
+      - name: Configure rpmmacros
+        run: |
+          cat > ~/.rpmmacros <<EOF
+          %_signature gpg
+          %_gpg_name XCP-ng Community Edition
+          %_gpgbin /usr/bin/gpg2
+          %__gpg_sign_cmd %{__gpg} gpg --batch --no-verbose --no-armor \
+            --passphrase-fd 3 --no-secmem-warning \
+            -u "%{_gpg_name}" -sbo %{__signature_filename} \
+            --digest-algo sha256 %{__plaintext_filename}
+          EOF
+
+      # ── 12. Sign RPM ──────────────────────────────────────────────────────
+      - name: Sign community RPM
+        run: |
+          echo "${GPG_PASSPHRASE}" | rpmsign --addsign \
+            --define "_gpg_name XCP-ng Community Edition" \
+            "${new_rpm}"
+          echo "▶ RPM signed: ${new_rpm}"
+        env:
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+
+      # ── 13. Verify RPM signature ──────────────────────────────────────────
+      - name: Verify RPM signature
+        run: |
+          rpm --import "$GITHUB_WORKSPACE/RPM-GPG-KEY-xcp-ng-ce"
+          echo "── RPM signature check ──────────────────────────────────────"
+          rpm --checksig "${new_rpm}"
+          rpm --checksig "${new_rpm}" | grep -q "gpg" \
+            || (echo "❌ GPG signature missing from RPM"; exit 1)
+          echo "✅ RPM signature verified"
+
+      # ── 14. Publish signed RPM as GitHub Release ──────────────────────────
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.release_tag }}
+          name: 'XO Lite Community RPM ${{ github.event.inputs.release_tag }}'
+          body: |
+            ## XO Lite Community Edition RPM
+
+            Community build of XO Lite with patched deploy behaviour:
+            - `lite.xen-orchestra.com` removed
+            - Deploy XOA points to community image URL
+
+            ### Source
+            - Built from tag `${{ steps.xo-tag.outputs.tag }}`
+            - XO Lite version: `${{ steps.xo-version.outputs.version }}`
+
+            ### Verification
+            Import the public key before verifying:
+            ```
+            rpm --import https://github.com/vagrantin/xolite-ce/raw/main/RPM-GPG-KEY-xcp-ng-ce
+            rpm --checksig xo-lite-community-*.noarch.rpm
+            ```
+
+            > Community build. Not supported by Vates.
+          files: ${{ env.new_rpm }}
+          draft: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
