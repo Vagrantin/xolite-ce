@@ -7,7 +7,7 @@ URL:     https://github.com/vatesfr/xen-orchestra
 
 BuildArch: noarch
 
-Source0: xo-lite-%{version}.tar.gz
+Source0: xo-lite-ce-%{version}.tar.gz
 
 %description
 Xen Orchestra Lite (Community Edition), patched to deploy a community-built
