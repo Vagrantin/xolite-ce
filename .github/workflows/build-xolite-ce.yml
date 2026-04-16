@@ -187,7 +187,8 @@ jobs:
       - name: Copy sources and spec
         run: |
           VERSION="${{ steps.xo-version.outputs.version }}"
-          cp "xo-lite-ce-${VERSION}.tar.gz" ~/rpmbuild/SOURCES/
+          # At this stage I rename the built package to xo-lite-ce*
+          cp "xo-lite-${VERSION}.tar.gz" ~/rpmbuild/SOURCES/xo-lite-ce-${VERSION}.tar.gz
           sed "s/^Version:.*/Version: ${VERSION}/" \
             "$GITHUB_WORKSPACE/SPECS/xo-lite-community.spec" \
             > ~/rpmbuild/SPECS/xo-lite-community.spec
