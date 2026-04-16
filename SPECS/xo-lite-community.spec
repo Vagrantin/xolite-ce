@@ -1,5 +1,5 @@
 Summary: Xen Orchestra Lite (Community Edition)
-Name:    xo-lite
+Name:    xo-lite-ce
 Version: 0.8.0
 Release: 1.0.community.1%{?dist}
 License: AGPL3-only
