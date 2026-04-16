@@ -4,6 +4,8 @@ Version: 0.8.0
 Release: 1.0.community.1%{?dist}
 License: AGPL3-only
 URL:     https://github.com/vatesfr/xen-orchestra
+Provides: xo-lite = %{version}-%{release}
+Conflicts: xo-lite
 
 BuildArch: noarch
 
