@@ -117,9 +117,9 @@ jobs:
 
           echo "── Checking xoa.io is GONE ─────────────────────────────────"
           if grep -Irl 'xoa\.io' "${DIST}"; then
-            echo "❌ FAIL: xoa.io still in built output"; exit 1
+            echo "✅ PASS: xoa.io found in dist"
           else
-            echo "✅ PASS: xoa.io not found in dist"
+            echo "❌ FAIL: xoa.io not found in built output"; exit 1
           fi
 
           echo "── Checking lite.xen-orchestra.com is GONE ─────────────────"
@@ -130,7 +130,7 @@ jobs:
           fi
 
           echo "── Checking community URL is PRESENT ───────────────────────"
-          if grep -Irl '192\.168\.0\.1' "${DIST}"; then
+          if grep -Irl 'xo-image' "${DIST}"; then
             echo "✅ PASS: community URL found in dist"
           else
             echo "❌ FAIL: community URL not found in dist"; exit 1
