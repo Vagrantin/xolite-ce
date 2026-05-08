@@ -6,6 +6,7 @@ License: AGPL3-only
 URL:     https://github.com/vatesfr/xen-orchestra
 Provides: xo-lite = %{version}-%{release}
 Conflicts: xo-lite
+Requires: xoa-proxy
 
 BuildArch: noarch
 
