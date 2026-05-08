@@ -75,7 +75,7 @@ jobs:
           fi
 
           echo "── Checking community URL is PRESENT ───────────────────────"
-          if grep -r '192\.168\.0\.1' \
+          if grep -r 'xo-image' \
               xen-orchestra/@xen-orchestra/lite/src/; then
             echo "✅ PASS: community URL found in source"
           else
