@@ -205,18 +205,28 @@ jobs:
 
       # ── 11. Import GPG key and configure for CI ───────────────────────────
       - name: Import GPG signing key
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
-          echo "${GPG_PRIVATE_KEY}" | gpg --batch --import
-          # Allow loopback passphrase — required for non-TTY environments
-          mkdir -p ~/.gnupg
-          chmod 700 ~/.gnupg
+          # Import passphrase-protected key
+          echo "${GPG_PRIVATE_KEY}" | gpg --batch --pinentry-mode loopback \
+            --passphrase "${GPG_PASSPHRASE}" --import
+
+          # Configure gpg-agent for non-TTY passphrase delivery
+          mkdir -p ~/.gnupg && chmod 700 ~/.gnupg
           echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
           gpgconf --kill gpg-agent
           gpgconf --launch gpg-agent
           sleep 1
+
+          # Pre-cache passphrase in agent — rpmsign will use it transparently
+          echo "${GPG_PASSPHRASE}" | gpg --batch --pinentry-mode loopback \
+            --passphrase-fd 0 --quiet --no-tty \
+            -u "XCP-ng Community Edition" \
+            --sign --output /dev/null /dev/null
+
           gpg --list-secret-keys
-        env:
-          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
             
       - name: Configure rpmmacros
         run: |
@@ -228,7 +238,10 @@ jobs:
           %_signature gpg
           %_gpg_name XCP-ng Community Edition
           %_gpgbin /usr/bin/gpg2
-          %__gpg_sign_cmd %{__gpg} gpg --batch --no-verbose --no-armor --no-secmem-warning --pinentry-mode loopback --passphrase '' -u "%{_gpg_name}" -sbo %{__signature_filename} --digest-algo sha256 %{__plaintext_filename}
+          %__gpg_sign_cmd %{__gpg} gpg --batch --no-verbose --no-armor \
+            --no-secmem-warning --pinentry-mode loopback \
+            -u "%{_gpg_name}" -sbo %{__signature_filename} \
+            --digest-algo sha256 %{__plaintext_filename}
           EOF
     
           echo "▶ rpmmacros written:"
