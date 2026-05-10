@@ -258,7 +258,7 @@ jobs:
       # ── 13. Verify RPM signature ──────────────────────────────────────────
       - name: Verify RPM signature
         run: |
-          rpm --import "$GITHUB_WORKSPACE/RPM-GPG-KEY-xcp-ng-ce"
+          rpm --import "$GITHUB_WORKSPACE/xcp-ng-ce-public.asc"
           echo "── RPM signature check ──────────────────────────────────────"
           rpm --checksig "${new_rpm}"
           rpm --checksig "${new_rpm}" | grep -q "digests signatures OK" \
