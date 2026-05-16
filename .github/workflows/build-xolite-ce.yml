@@ -22,6 +22,16 @@ jobs:
       - name: Checkout xolite-ce
         uses: actions/checkout@v4
 
+      - name: Derive versions from tag
+        run: |
+          TAG="${{ github.ref_name }}"
+          # workflow_dispatch without a tag push gives branch name (e.g. "main")
+          # allow manual override via input
+          if [ -n "${{ github.event.inputs.release_tag }}" ]; then
+            TAG="${{ github.event.inputs.release_tag }}"
+          fi
+          echo "RELEASE_TAG=${TAG}" >> $GITHUB_ENV
+
       # ── 1. Install system dependencies ──────────────────────────────────
       - name: Install system tools
         run: |
@@ -272,8 +282,8 @@ jobs:
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name}}
-          name: 'XO Lite Community RPM ${{ github.ref_name }}'
+          tag_name: ${{ env.RELEASE_TAG }}
+          name: 'XO Lite Community RPM ${{ env.RELEASE_TAG }}'
           body: |
             ## XO Lite Community Edition RPM
 
