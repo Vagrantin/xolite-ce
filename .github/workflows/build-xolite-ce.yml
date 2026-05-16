@@ -1,4 +1,4 @@
-name: 'XO lite Community RPM ${{ github.ref_name }}'
+name: XO lite Community RPM
 
 on:
   push:
