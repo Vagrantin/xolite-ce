@@ -1,11 +1,14 @@
-name: Build and Sign XO Lite Community RPM
+name: 'XO lite Community RPM ${{ github.ref_name }}'
 
 on:
+  push:
+    tags:
+      - 'v*-ce[0-9]*'
   workflow_dispatch:
     inputs:
       release_tag:
-        description: 'Release tag (e.g. xo-lite-ce-20260411)'
-        required: true
+        description: 'Emergency release'
+        required: false
 
 jobs:
   build-rpm:
@@ -269,8 +272,8 @@ jobs:
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.event.inputs.release_tag }}
-          name: 'XO Lite Community RPM ${{ github.event.inputs.release_tag }}'
+          tag_name: ${{ github.ref_name}}
+          name: 'XO Lite Community RPM ${{ github.ref_name }}'
           body: |
             ## XO Lite Community Edition RPM
 
