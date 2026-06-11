@@ -43,7 +43,7 @@ index 26937a4d7..18765c2ef 100644
 +              <div class="image-source-row">
 +                <select v-model="imageSource" class="image-source-select">
 +                  <option value="vates">{{ t('vates-image') }}</option>
-+                  <option value="ronivay">{{ t('ronivay-image') }}</option>
++                  <option value="devplatform">{{ t('devplatform-image') }}</option>
 +                  <option value="custom">{{ t('custom-url') }}</option>
 +                </select>
 +                <FormInput
@@ -55,7 +55,7 @@ index 26937a4d7..18765c2ef 100644
 +              </div>
 +            </VtsInputWrapper>
 +          </div>
-+          <!-- SSL toggle: only relevant for proxy paths (ronivay / custom) -->
++          <!-- SSL toggle: only relevant for proxy paths (devplatform / custom) -->
 +          <div v-if="imageSource !== 'vates'" class="row">
 +            <VtsInputWrapper>
 +              <UiToggle v-model="verifySsl">{{ t('verify-ssl-certificate') }}</UiToggle>
@@ -171,15 +171,15 @@ index 26937a4d7..18765c2ef 100644
  
 +// ── XOA image sources ─────────────────────────────────────────────────────────
 +// Option 1 – Vates official: VM.import called directly, no proxy.
-+// Option 2 – Ronivay community: routed through xoa-proxy (gzip + HTTP/HTTPS).
-+// Option 3 – Custom URL: same proxy path as ronivay.
++// Option 2 – Dev platform: routed through xoa-proxy (gzip + HTTP/HTTPS).
++// Option 3 – Custom URL: same proxy path as devplatform.
 +const XOA_VATES_IMAGE_URL = 'http://xoa.io/xva'
-+const XOA_RONIVAY_IMAGE_URL = 'https://xo-image.yawn.fi/downloads/image.xva.gz'
++const XOA_DEVPLATFORM_IMAGE_URL = 'http://192.168.0.66:3000/xoa-hl.xva.gz'
 +
-+type ImageSource = 'vates' | 'ronivay' | 'custom'
++type ImageSource = 'vates' | 'devplatform' | 'custom'
 +
 +/** Which image source is currently selected. */
-+const imageSource = ref<ImageSource>('ronivay')
++const imageSource = ref<ImageSource>('devplatform')
 +
 +/**
 + * User-entered URL, only used when imageSource === 'custom'.
@@ -219,7 +219,7 @@ index 26937a4d7..18765c2ef 100644
  const { t } = useI18n()
  const router = useRouter()
  
-@@ -307,12 +392,44 @@ const ip = ref('')
+@@ -307,12 +392,54 @@ const ip = ref('')
  const netmask = ref('')
  const dns = ref('')
  const gateway = ref('')
@@ -228,35 +228,40 @@ index 26937a4d7..18765c2ef 100644
 -const xoaPwdConfirm = ref('')
 +
 +// Credential refs — values depend on imageSource (see watch below).
-+// Start with CE defaults because default imageSource is 'ronivay'.
-+const xoaUser = ref('admin@admin.net')
-+const xoaPwd = ref('admin')
-+const xoaPwdConfirm = ref('admin')
++// Start with devplatform defaults because default imageSource is 'devplatform'.
++const xoaUser = ref('xoa-ce-test.tidbit054@passmail.net')
++const xoaPwd = ref('0Tz#e*sNYUhdw7&ujSkT')
++const xoaPwdConfirm = ref('0Tz#e*sNYUhdw7&ujSkT')
  const enableSshAccount = ref(true)
 -const sshPwd = ref('')
 -const sshPwdConfirm = ref('')
-+const sshPwd = ref('xopass')
-+const sshPwdConfirm = ref('xopass')
++const sshPwd = ref('Decaf7')
++const sshPwdConfirm = ref('Decaf7')
 +
 +/**
 + * True when fields should be editable (Vates or Custom).
-+ * Only the Ronivay option uses baked-in, pre-filled credentials.
++ * Only the devplatform option uses baked-in, pre-filled credentials.
 + */
-+const isEditable = computed(() => imageSource.value !== 'ronivay')
++const isEditable = computed(() => imageSource.value !== 'devplatform')
 +
 +/**
-+ * When switching to the Vates path, clear baked-in defaults so the user must
-+ * fill in real credentials (upstream behaviour).
-+ * When switching away, restore the pre-filled CE defaults.
++ * When switching to devplatform, restore pre-filled defaults (credentials + static IP).
++ * When switching away, clear everything so the user must fill in real values.
++ * immediate: true ensures devplatform IP fields are populated on initial render.
 + */
 +watch(imageSource, source => {
-+  if (source === 'ronivay') {
-+    xoaUser.value = 'admin@admin.net'
-+    xoaPwd.value = 'admin'
-+    xoaPwdConfirm.value = 'admin'
-+    sshPwd.value = 'xopass'
-+    sshPwdConfirm.value = 'xopass'
++  if (source === 'devplatform') {
++    xoaUser.value = 'xoa-ce-test.tidbit054@passmail.net'
++    xoaPwd.value = '0Tz#e*sNYUhdw7&ujSkT'
++    xoaPwdConfirm.value = '0Tz#e*sNYUhdw7&ujSkT'
++    sshPwd.value = 'Decaf7'
++    sshPwdConfirm.value = 'Decaf7'
 +    enableSshAccount.value = true
++    ipStrategy.value = 'static'
++    ip.value = '192.168.0.15'
++    netmask.value = '255.255.255.0'
++    gateway.value = '192.168.0.3'
++    dns.value = '192.168.0.3'
 +  } else {
 +    xoaUser.value = ''
 +    xoaPwd.value = ''
@@ -264,12 +269,17 @@ index 26937a4d7..18765c2ef 100644
 +    sshPwd.value = ''
 +    sshPwdConfirm.value = ''
 +    enableSshAccount.value = true
++    ipStrategy.value = 'dhcp'
++    ip.value = ''
++    netmask.value = ''
++    gateway.value = ''
++    dns.value = ''
 +  }
-+})
++}, { immediate: true })
  
  async function deploy() {
    if (selectedSr.value === undefined || selectedNetwork.value === undefined) {
-@@ -332,7 +449,7 @@ async function deploy() {
+@@ -332,7 +459,7 @@ async function deploy() {
  
    if (xoaUser.value === '' || xoaPwd.value === '') {
      // Should not happen
@@ -278,7 +288,7 @@ index 26937a4d7..18765c2ef 100644
      return
    }
  
-@@ -344,7 +461,7 @@ async function deploy() {
+@@ -344,7 +471,7 @@ async function deploy() {
  
    if (enableSshAccount.value && sshPwd.value === '') {
      // Should not happen
@@ -287,18 +297,18 @@ index 26937a4d7..18765c2ef 100644
      return
    }
  
-@@ -359,9 +476,20 @@ async function deploy() {
+@@ -359,9 +486,20 @@ async function deploy() {
    try {
      status.value = t('deploy-xoa-status:importing')
  
 +    // Option 1 (Vates): call VM.import directly — upstream behaviour, no proxy.
-+    // Options 2 & 3 (Ronivay / Custom): route through xoa-proxy which handles
++    // Options 2 & 3 (devplatform / Custom): route through xoa-proxy which handles
 +    // gzip decompression and both HTTP/HTTPS sources (including self-signed TLS).
 +    const importUrl =
 +      imageSource.value === 'vates'
 +        ? XOA_VATES_IMAGE_URL
 +        : buildProxyUrl(
-+            imageSource.value === 'ronivay' ? XOA_RONIVAY_IMAGE_URL : xoaImageUrl.value,
++            imageSource.value === 'devplatform' ? XOA_DEVPLATFORM_IMAGE_URL : xoaImageUrl.value,
 +            verifySsl.value
 +          )
 +
@@ -321,7 +331,7 @@ index 26937a4d7..18765c2ef 100644
  
      if (!deploying.value) {
        return
-@@ -508,6 +639,29 @@ async function cancel() {
+@@ -508,6 +649,29 @@ async function cancel() {
    }
  }
  
@@ -355,22 +365,15 @@ diff --git a/@xen-orchestra/web-core/lib/locales/en.json b/@xen-orchestra/web-co
 index 2c9a06e85..18706266c 100644
 --- a/@xen-orchestra/web-core/lib/locales/en.json
 +++ b/@xen-orchestra/web-core/lib/locales/en.json
-@@ -262,6 +262,7 @@
+@@ -262,6 +262,8 @@
    "current": "Current",
    "current-attach": "Current attach",
    "custom-fields": "Custom fields",
 +  "custom-url": "Custom URL",
++  "devplatform-image": "Dev platform",
    "dark-mode:auto": "Auto dark mode",
    "dark-mode:disable": "Disable dark mode",
    "dark-mode:enable": "Enable dark mode",
-@@ -788,6 +789,7 @@
-   "resources-overview": "Resources overview",
-   "rest-api": "REST API",
-   "retry": "Retry",
-+  "ronivay-image": "Ronivay's image",
-   "root-by-default": "\"root\" by default.",
-   "run": "Run",
-   "running-vm": "Running VM | Running VMs",
 @@ -951,6 +953,7 @@
    "user-config": "User config",
    "username": "Username",
@@ -379,7 +382,7 @@ index 2c9a06e85..18706266c 100644
    "vbd-connect-title": "You are about to connect 1 VBD | You are about to connect {n} VBDs",
    "vbd-delete-info": "This will detach the selected VDI from the VM. The disk will not be deleted and can be reattached later.",
    "vbd-delete-title": "You are about to delete 1 VBD | You are about to delete {n} VBDs",
-@@ -964,6 +967,7 @@
+@@ -964,6 +966,7 @@
    "vdi-throughput": "VDI throughput",
    "vdis": "VDIs",
    "version": "Version",
@@ -387,7 +390,7 @@ index 2c9a06e85..18706266c 100644
    "vga": "VGA",
    "video-ram": "Video RAM",
    "vif": "VIF",
-@@ -1035,6 +1039,7 @@
+@@ -1035,6 +1038,7 @@
    "xoa-deploy-failed!": "Sorry, deployment failed!",
    "xoa-deploy-retry": "Try again to deploy XOA",
    "xoa-deploy-successful!": "XOA deployment successful!",
