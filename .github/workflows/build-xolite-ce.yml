@@ -1,4 +1,4 @@
-name: XO lite Community RPM
+name: XO lite home labber RPM
 
 on:
   push:
@@ -283,7 +283,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.RELEASE_TAG }}
-          name: 'XO Lite Community RPM ${{ env.RELEASE_TAG }}'
           body: |
             ## XO Lite Community Edition RPM
 
