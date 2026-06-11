@@ -143,7 +143,7 @@ jobs:
           fi
 
           echo "── Checking community URL is PRESENT ───────────────────────"
-          if grep -Irl 'xo-image' "${DIST}"; then
+          if grep -Irl 'xoa-hl' "${DIST}"; then
             echo "✅ PASS: community URL found in dist"
           else
             echo "❌ FAIL: community URL not found in dist"; exit 1
