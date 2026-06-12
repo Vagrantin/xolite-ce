@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: 'Emergency release'
+        description: 'Emergency release tag'
         required: false
 
 jobs:
@@ -22,22 +22,25 @@ jobs:
       - name: Checkout xolite-ce
         uses: actions/checkout@v4
 
+      # Generates a clean safety fallback tag if run via orchestrator dispatch
       - name: Derive versions from tag
         run: |
           TAG="${{ github.ref_name }}"
-          # workflow_dispatch without a tag push gives branch name (e.g. "main")
-          # allow manual override via input
-          if [ -n "${{ github.event.inputs.release_tag }}" ]; then
-            TAG="${{ github.event.inputs.release_tag }}"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            if [ -n "${{ github.event.inputs.release_tag }}" ]; then
+              TAG="${{ github.event.inputs.release_tag }}"
+            else
+              TAG="v-ce-automated-$(date +'%Y%m%d%H%M')-run${{ github.run_number }}"
+            fi
           fi
           echo "RELEASE_TAG=${TAG}" >> $GITHUB_ENV
+          echo "▶ Target release tag established as: ${TAG}"
 
       # ── 1. Install system dependencies ──────────────────────────────────
       - name: Install system tools
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y \
-            rpm rpm2cpio gnupg2\
+          sudo apt-get install -y rpm rpm2cpio gnupg2
 
       # ── 2. Clone vatesfr/xen-orchestra at latest xo-lite-v* tag ─────────
       - name: Detect latest xo-lite tag
@@ -79,8 +82,7 @@ jobs:
       - name: Verify patch in source
         run: |
           echo "── Checking lite.xen-orchestra.com try/catch is GONE ───────────────────"
-          if grep 'lite\.xen-orchestra\.com' xen-orchestra/@xen-orchestra/lite/scripts/xolite-loader.html \
-              xen-orchestra/@xen-orchestra/lite/scripts/; then
+          if grep -r 'lite\.xen-orchestra\.com' xen-orchestra/@xen-orchestra/lite/scripts/; then
             echo "❌ FAIL: lite.xen-orchestra.com still present in source"
             exit 1
           else
@@ -88,8 +90,7 @@ jobs:
           fi
 
           echo "── Checking community URL is PRESENT ───────────────────────"
-          if grep -r 'xo-image' \
-              xen-orchestra/@xen-orchestra/lite/src/; then
+          if grep -r 'xo-image' xen-orchestra/@xen-orchestra/lite/src/; then
             echo "✅ PASS: community URL found in source"
           else
             echo "❌ FAIL: community URL not found in source"
@@ -132,7 +133,7 @@ jobs:
           if grep -Irl 'xoa\.io' "${DIST}"; then
             echo "✅ PASS: xoa.io found in dist"
           else
-            echo "❌ FAIL: xoa.io not found in built output"; exit 1
+            echo "❌ FAIL: xoa.io not found in dist"; exit 1
           fi
 
           echo "── Checking lite.xen-orchestra.com is GONE ─────────────────"
@@ -185,7 +186,7 @@ jobs:
           ls -lh "${TARBALL_DIR}/"
 
           for f in index.html assets favicon.svg manifest.webmanifest \
-                    xolite.html build.json LICENSE CHANGELOG.md; do
+                   xolite.html build.json LICENSE CHANGELOG.md; do
             test -e "${TARBALL_DIR}/${f}" \
               || (echo "❌ Missing: ${TARBALL_DIR}/${f}"; exit 1)
           done
@@ -200,7 +201,6 @@ jobs:
       - name: Copy sources and spec
         run: |
           VERSION="${{ steps.xo-version.outputs.version }}"
-          # At this stage I rename the built package to xo-lite-ce*
           cp "xo-lite-${VERSION}.tar.gz" ~/rpmbuild/SOURCES/xo-lite-ce-${VERSION}.tar.gz
           sed "s/^Version:.*/Version: ${VERSION}/" \
             "$GITHUB_WORKSPACE/SPECS/xo-lite-community.spec" \
@@ -222,25 +222,20 @@ jobs:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
-          # Import passphrase-protected key
           echo "${GPG_PRIVATE_KEY}" | gpg --batch --pinentry-mode loopback \
             --passphrase "${GPG_PASSPHRASE}" --import
 
-          # Configure gpg-agent for non-TTY passphrase delivery
           mkdir -p ~/.gnupg && chmod 700 ~/.gnupg
           echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
           gpgconf --kill gpg-agent
           gpgconf --launch gpg-agent
           sleep 1
 
-          # Pre-cache passphrase in agent — rpmsign will use it transparently
           echo "${GPG_PASSPHRASE}" | gpg --batch --pinentry-mode loopback \
             --passphrase-fd 0 --quiet --no-tty \
             -u "XCP-ng Community Edition" \
             --sign --output /dev/null /dev/null
 
-          gpg --list-secret-keys
-            
       - name: Configure rpmmacros
         run: |
           GPG_KEY_ID=$(gpg --list-secret-keys --with-colons \
@@ -286,7 +281,7 @@ jobs:
           body: |
             ## XO Lite Community Edition RPM
 
-            Community build of XO Lite with patched deploy behaviour:
+            Community build of XO Lite with patched deploy behavior:
             - `lite.xen-orchestra.com` removed
             - Deploy XOA points to community image URL
 
