@@ -30,6 +30,7 @@ rm %{buildroot}/opt/xensource/www/LICENSE \
 %license LICENSE
 %doc CHANGELOG.md
 /opt/xensource/www/assets
+/opt/xensource/www/robot.txt
 /opt/xensource/www/build.json
 /opt/xensource/www/favicon.svg
 /opt/xensource/www/index.html
