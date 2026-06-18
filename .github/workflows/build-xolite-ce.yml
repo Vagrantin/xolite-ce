@@ -82,7 +82,7 @@ jobs:
       - name: Verify patch in source
         run: |
           echo "── Checking lite.xen-orchestra.com try/catch is GONE ───────────────────"
-          if grep -r 'lite\.xen-orchestra\.com' xen-orchestra/@xen-orchestra/lite/scripts/ -v xen-orchestra/@xen-orchestra/lite/scripts/release.mjs; then
+          if grep -r --exclude=release.mjs 'lite\.xen-orchestra\.com' xen-orchestra/@xen-orchestra/lite/scripts/; then
             echo "❌ FAIL: lite.xen-orchestra.com still present in source"
             exit 1
           else
