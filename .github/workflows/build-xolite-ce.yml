@@ -91,6 +91,7 @@ jobs:
           
           echo "▶ Patch pipeline execution complete. Modified files:"
           git status --short
+          git diff
 
       # ── 5. Verify patch in source before building ────────────────────────
       - name: Verify patch in source
