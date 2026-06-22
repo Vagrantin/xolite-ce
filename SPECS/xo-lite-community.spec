@@ -13,7 +13,7 @@ BuildArch: noarch
 Source0: xo-lite-ce-%{version}.tar.gz
 
 %description
-Xen Orchestra Lite (Community Edition), patched to deploy a community-built
+Xen Orchestra Lite (Home-laber Edition), patched to deploy a community-built
 XOA image. The XVA URL is resolved at runtime from
 https://xo-image.yawn.fi/downloads/image.txt
 
@@ -38,6 +38,6 @@ rm %{buildroot}/opt/xensource/www/LICENSE \
 /opt/xensource/www/xolite.html
 
 %changelog
-* Mon Apr 06 2026 Community Build <community@build> - 0.8.0-1.0.community.1
-- Community Edition: deploy URL sourced from xo-image.yawn.fi/downloads/image.txt
+* Mon Apr 06 2026 Home-laber Build <community@build> - 0.8.0-1.0.community.1
+- Home-laber Edition: deploy URL sourced from xo-image.yawn.fi/downloads/image.txt
 - Removed lite.xen-orchestra.com fallback loader from index.html
