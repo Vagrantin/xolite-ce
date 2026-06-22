@@ -71,13 +71,26 @@ jobs:
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
           echo "▶ XO Lite version: ${VERSION}"
 
-      # ── 4. Apply community patch ─────────────────────────────────────────
+      # ── 4. Apply community patch via modular patch pipeline ──────────────
       - name: Apply community patch
         run: |
           cd xen-orchestra
-          git apply "$GITHUB_WORKSPACE/patches/community-xoa-deploy.patch"
-          echo "▶ Patch applied. Modified files:"
-          git diff --name-only HEAD
+          
+          # Create a symlink so scripts find both @xen-orchestra and patches at the same level
+          ln -s "$GITHUB_WORKSPACE/patches" patches
+          
+          echo "── Running update_locales.sh ──"
+          bash patches/update_locales.sh
+          
+          echo "── Running update-xolite-loader.sh ──"
+          bash patches/update-xolite-loader.sh
+          
+          echo "── Running xoa-deploy-patcher (Rust tool) ──"
+          chmod +x patches/xoa-deploy-patcher
+          ./patches/xoa-deploy-patcher @xen-orchestra/lite/src/pages/xoa-deploy.vue
+          
+          echo "▶ Patch pipeline execution complete. Modified files:"
+          git status --short
 
       # ── 5. Verify patch in source before building ────────────────────────
       - name: Verify patch in source
