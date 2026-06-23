@@ -100,7 +100,7 @@ jobs:
           git status --short
           echo "Add robots.txt for version prior to v0.22.0"
           XOLITEVERSION="${{steps.xo-version.outputs.version}}"
-          if dpkg --compare-version "$XOLITEVERSION" lt "0.22.0"; then
+          if dpkg --compare-versions "$XOLITEVERSION" lt "0.22.0"; then
             echo "Version ${XOLITEVERSION} < v0.22.0 - Copying robots.txt into public"
             cp packages/xo-server/robots.txt @xen-orchestra/lite/public/robots.txt
           else 
