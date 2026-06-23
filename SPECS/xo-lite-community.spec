@@ -1,11 +1,11 @@
 Summary: Xen Orchestra Lite (Home-laber Edition)
 Name:    xo-lite-ce
 Version: 0.8.0
-Release: 1%{?dist}
+Release: 1.xcpng8.3.%{?dist}
 License: AGPL3-only
 URL:     https://github.com/vatesfr/xen-orchestra
 Provides: xo-lite = %{version}-%{release}
-Conflicts: xo-lite
+Obsoletes: xo-lite <= %{version}-%{release}
 Requires: xoa-proxy
 
 BuildArch: noarch
