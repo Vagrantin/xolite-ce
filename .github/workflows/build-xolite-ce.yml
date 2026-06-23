@@ -43,17 +43,24 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y rpm rpm2cpio gnupg2
 
-      # ── 2. Clone vatesfr/xen-orchestra at latest xo-lite-v* tag ─────────
-      - name: Detect latest xo-lite tag
+      # ── 2. Clone vatesfr/xen-orchestra at latest *released* xo-lite-v* tag ─
+      - name: Detect latest released xo-lite tag
         id: xo-tag
         run: |
-          LATEST_TAG=$(git -c 'versionsort.suffix=-' \
-            ls-remote --tags --sort=v:refname \
-            https://github.com/vatesfr/xen-orchestra.git \
-            'refs/tags/xo-lite-v*' \
-            | tail -1 | sed 's|.*refs/tags/||')
+          LATEST_TAG=$(curl -sf \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/vatesfr/xen-orchestra/releases?per_page=10" \
+            | jq -r '
+                [.[] | select(.tag_name | test("^xo-lite-v")) | select(.assets | length > 0)]
+                | first | .tag_name
+              ')
+
+          [ -z "$LATEST_TAG" ] || [ "$LATEST_TAG" = "null" ] \
+            && echo "❌ No released xo-lite-v* tag with assets found" && exit 1
+
           echo "tag=${LATEST_TAG}" >> $GITHUB_OUTPUT
-          echo "▶ Latest xo-lite tag: ${LATEST_TAG}"
+          echo "▶ Latest released xo-lite tag: ${LATEST_TAG}"
 
       - name: Clone xen-orchestra at latest tag
         run: |
