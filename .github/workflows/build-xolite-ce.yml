@@ -98,9 +98,14 @@ jobs:
           
           echo "▶ Patch pipeline execution complete. Modified files:"
           git status --short
-          git diff
-          echo "Check the content of the file after patching."
-          cat @xen-orchestra/lite/src/pages/xoa-deploy.vue
+          echo "Add robots.txt for version prior to v0.22.0"
+          XOLITEVERSION = "${{steps.xo-version.outputs.version}}"
+          if dpkg --compare-version "$XOLITEVERSION" lt "0.22.0"; then
+            echo "Version ${XOLITEVERSION} < v0.22.0 - Copying robots.txt into public"
+            cp packages/xo-server/robots.txt @xen-orchestra/lite/public/robots.txt
+          else 
+            echo "Version ${XOLITEVERSION} >= v0.22.0 - robots.txt already present in upstream"
+          fi
 
       # ── 5. Verify patch in source before building ────────────────────────
       - name: Verify patch in source
