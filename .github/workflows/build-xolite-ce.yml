@@ -43,26 +43,18 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y rpm rpm2cpio gnupg2
 
-      # ── 2. Clone vatesfr/xen-orchestra at latest *released* xo-lite-v* tag ─
-      - name: Detect latest released xo-lite tag
+      # ── 2. Clone vatesfr/xen-orchestra at the *pinned* xo-lite-v* tag ─────
+      # The pin lives in the UPSTREAM_TAG file at the repo root, so builds only
+      # move when that file is deliberately bumped (same approach as xoa-hl).
+      - name: Read pinned xo-lite tag
         id: xo-tag
         run: |
-          LATEST_TAG=$(curl -sf \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/vatesfr/xen-orchestra/releases?per_page=10" \
-            | jq -r '
-                [.[] | select(.tag_name | test("^xo-lite-v")) | select(.assets | length > 0)]
-                | first | .tag_name
-              ')
+          TAG=$(tr -d ' \n' < UPSTREAM_TAG)
+          [ -n "$TAG" ] || { echo "❌ UPSTREAM_TAG is empty"; exit 1; }
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          echo "▶ Pinned xo-lite tag: ${TAG}"
 
-          [ -z "$LATEST_TAG" ] || [ "$LATEST_TAG" = "null" ] \
-            && echo "❌ No released xo-lite-v* tag with assets found" && exit 1
-
-          echo "tag=${LATEST_TAG}" >> $GITHUB_OUTPUT
-          echo "▶ Latest released xo-lite tag: ${LATEST_TAG}"
-
-      - name: Clone xen-orchestra at latest tag
+      - name: Clone xen-orchestra at pinned tag
         run: |
           git clone --depth 1 \
             --branch "${{ steps.xo-tag.outputs.tag }}" \
