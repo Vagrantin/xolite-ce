@@ -223,9 +223,23 @@ jobs:
         run: |
           VERSION="${{ steps.xo-version.outputs.version }}"
           cp "xo-lite-${VERSION}.tar.gz" ~/rpmbuild/SOURCES/xo-lite-ce-${VERSION}.tar.gz
-          sed "s/^Version:.*/Version: ${VERSION}/" \
+
+          # Put the ce counter from the release tag (vX.Y.Z-ceN → N) into the
+          # RPM Release field so every ce build has a distinct NEVRA — with a
+          # fixed Release, consecutive ce builds produced identical filenames,
+          # hiding which build actually landed in the ISO and preventing yum
+          # upgrades between ce releases.
+          case "${RELEASE_TAG}" in
+            *-ce[0-9]*) CE_COUNTER="${RELEASE_TAG##*-ce}" ;;
+            *)          CE_COUNTER="0.${{ github.run_number }}" ;;  # automated fallback tag, sorts below any real ce release
+          esac
+          echo "▶ RPM Release counter: ${CE_COUNTER}"
+
+          sed -e "s/^Version:.*/Version: ${VERSION}/" \
+              -e "s/^Release: 1\./Release: ${CE_COUNTER}./" \
             "$GITHUB_WORKSPACE/SPECS/xo-lite-community.spec" \
             > ~/rpmbuild/SPECS/xo-lite-community.spec
+          grep -E '^(Version|Release):' ~/rpmbuild/SPECS/xo-lite-community.spec
 
       - name: Build RPM
         run: |
