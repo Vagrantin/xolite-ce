@@ -1,9 +1,13 @@
 Summary: Xen Orchestra Lite (Home-laber Edition)
 Name:    xo-lite-ce
-Version: 0.8.0
-# The leading number is the ce release counter — CI rewrites it from the
-# vX.Y.Z-ceN tag so every ce build has a distinct, upgradeable NEVRA.
-Release: 1.xcpng8.3%{?dist}
+Version: %{_version}
+# _release, _shortcommit and _version are all passed via --define from CI.
+# The leading number in Release is the ce release counter, computed from the
+# vX.Y.Z-ceN tag (or a run-number fallback) so every ce build has a distinct,
+# upgradeable NEVRA; g<shortcommit> is the xolite-ce repo commit that
+# produced the patch, since Version alone (the upstream xo-lite version)
+# doesn't identify which patch revision built this RPM.
+Release: %{_release}.g%{_shortcommit}.xcpng8.3%{?dist}
 License: AGPL3-only
 URL:     https://github.com/vatesfr/xen-orchestra
 Provides: xo-lite = %{version}-%{release}

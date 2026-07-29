@@ -223,6 +223,7 @@ jobs:
         run: |
           VERSION="${{ steps.xo-version.outputs.version }}"
           cp "xo-lite-${VERSION}.tar.gz" ~/rpmbuild/SOURCES/xo-lite-ce-${VERSION}.tar.gz
+          cp "$GITHUB_WORKSPACE/SPECS/xo-lite-community.spec" ~/rpmbuild/SPECS/
 
           # Put the ce counter from the release tag (vX.Y.Z-ceN → N) into the
           # RPM Release field so every ce build has a distinct NEVRA — with a
@@ -233,18 +234,19 @@ jobs:
             *-ce[0-9]*) CE_COUNTER="${RELEASE_TAG##*-ce}" ;;
             *)          CE_COUNTER="0.${{ github.run_number }}" ;;  # automated fallback tag, sorts below any real ce release
           esac
-          echo "▶ RPM Release counter: ${CE_COUNTER}"
-
-          sed -e "s/^Version:.*/Version: ${VERSION}/" \
-              -e "s/^Release: 1\./Release: ${CE_COUNTER}./" \
-            "$GITHUB_WORKSPACE/SPECS/xo-lite-community.spec" \
-            > ~/rpmbuild/SPECS/xo-lite-community.spec
-          grep -E '^(Version|Release):' ~/rpmbuild/SPECS/xo-lite-community.spec
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          echo "VERSION=${VERSION}"         >> $GITHUB_ENV
+          echo "CE_COUNTER=${CE_COUNTER}"   >> $GITHUB_ENV
+          echo "SHORT_SHA=${SHORT_SHA}"     >> $GITHUB_ENV
+          echo "▶ RPM Version/Release: ${VERSION} / ${CE_COUNTER}.g${SHORT_SHA}.xcpng8.3"
 
       - name: Build RPM
         run: |
           rpmbuild -ba ~/rpmbuild/SPECS/xo-lite-community.spec \
-            --define "_topdir $HOME/rpmbuild"
+            --define "_topdir $HOME/rpmbuild" \
+            --define "_version ${VERSION}" \
+            --define "_release ${CE_COUNTER}" \
+            --define "_shortcommit ${SHORT_SHA}"
 
           NEW_RPM=$(find ~/rpmbuild/RPMS/noarch/ -name "xo-lite-ce-*.rpm" | head -1)
           echo "new_rpm=${NEW_RPM}" >> $GITHUB_ENV
