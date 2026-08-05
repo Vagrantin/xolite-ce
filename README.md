@@ -31,31 +31,21 @@ simpler route is the `xcp-hl-release` package, which owns
 together, so repository configuration arrives through `yum` like any other
 update instead of having to be re-downloaded by hand:
 
-```bash
-curl -L -o /etc/yum.repos.d/xcp-hl.repo \
-  https://vagrantin.github.io/xcp-hl/xcp-hl.repo
-rpm --import https://vagrantin.github.io/xcp-hl/xcp-ng-ce-public.asc
-yum clean all && yum install xcp-hl-release
-```
-
 Hosts installed from a recent ISO already have it. See the
 [Updates documentation](https://vagrantin.github.io/xcp-hl/updates.html).
 
 On an XCP-ng 8.3 host, as root:
 
 ```bash
-curl -L -o /etc/yum.repos.d/xcp-hl-xolite.repo \
-  https://vagrantin.github.io/xolite-ce/xcp-hl-xolite.repo
-
-rpm --import https://vagrantin.github.io/xolite-ce/xcp-ng-ce-public.asc
-
-yum clean all
+curl -L -o /etc/yum.repos.d/xcp-hl.repo \
+  https://vagrantin.github.io/xcp-hl/xcp-hl.repo
+rpm --import https://vagrantin.github.io/xcp-hl/xcp-ng-ce-public.asc
+yum clean all && yum install xcp-hl-release
 yum update xo-lite-ce
 ```
 
 Note that `yum` never re-fetches a `.repo` file once it is installed, so a change
-to the repository configuration published here only reaches a host that
-downloads it again.
+to the repository configuration is applied by updating xcp-hl-release RPM package.
 
 ### How it is built
 
