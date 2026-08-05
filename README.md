@@ -32,7 +32,7 @@ together, so repository configuration arrives through `yum` like any other
 update instead of having to be re-downloaded by hand:
 
 ```bash
-curl -o /etc/yum.repos.d/xcp-hl.repo \
+curl -L -o /etc/yum.repos.d/xcp-hl.repo \
   https://vagrantin.github.io/xcp-hl/xcp-hl.repo
 rpm --import https://vagrantin.github.io/xcp-hl/xcp-ng-ce-public.asc
 yum clean all && yum install xcp-hl-release
@@ -44,7 +44,7 @@ Hosts installed from a recent ISO already have it. See the
 On an XCP-ng 8.3 host, as root:
 
 ```bash
-curl -o /etc/yum.repos.d/xcp-hl-xolite.repo \
+curl -L -o /etc/yum.repos.d/xcp-hl-xolite.repo \
   https://vagrantin.github.io/xolite-ce/xcp-hl-xolite.repo
 
 rpm --import https://vagrantin.github.io/xolite-ce/xcp-ng-ce-public.asc
