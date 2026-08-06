@@ -13,8 +13,6 @@ URL:     https://github.com/vatesfr/xen-orchestra
 Provides: xo-lite = %{version}-%{release}
 Obsoletes: xo-lite <= %{version}-%{release}
 Requires: xoa-proxy
-# Carries the XCP-HL repo config onto hosts installed from the ISO, where
-# nothing else depends on a -release package.
 Requires: xcp-hl-release
 
 BuildArch: noarch
