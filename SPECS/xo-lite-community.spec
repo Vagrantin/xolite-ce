@@ -13,6 +13,7 @@ URL:     https://github.com/vatesfr/xen-orchestra
 Provides: xo-lite = %{version}-%{release}
 Obsoletes: xo-lite <= %{version}-%{release}
 Requires: xoa-proxy
+Requires: xcp-hl-release
 
 BuildArch: noarch
 
