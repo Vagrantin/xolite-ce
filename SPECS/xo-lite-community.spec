@@ -11,7 +11,9 @@ Release: %{_release}.g%{_shortcommit}.xcpng8.3%{?dist}
 License: AGPL3-only
 URL:     https://github.com/vatesfr/xen-orchestra
 Provides: xo-lite = %{version}-%{release}
-Obsoletes: xo-lite <= %{version}-%{release}
+# Unversioned on purpose: a bounded obsoletes stops matching once upstream
+# xo-lite outruns our version, losing the ISO dependency race to it.
+Obsoletes: xo-lite
 Requires: xoa-proxy
 Requires: xcp-hl-release
 
