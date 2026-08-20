@@ -1,4 +1,4 @@
-Summary: Xen Orchestra Lite (Home-laber Edition)
+Summary: Xen Orchestra Lite for XCP-ng HomeLab Edition
 Name:    xo-lite-ce
 Version: %{_version}
 # _release, _shortcommit and _version are all passed via --define from CI.
@@ -22,9 +22,23 @@ BuildArch: noarch
 Source0: xo-lite-ce-%{version}.tar.gz
 
 %description
-Xen Orchestra Lite (Home-laber Edition), patched to deploy a community-built
-XOA image. The XVA URL is resolved at runtime from
-https://xo-image.yawn.fi/downloads/image.txt
+Xen Orchestra Lite, customised for XCP-ng HomeLab Edition (XCP-HL).
+
+Upstream XO Lite deploys one hardcoded appliance image. This build turns the
+Deploy XOA flow into a choice of image sources:
+
+ * XOA-HL, the default, a Xen Orchestra appliance built from source for
+   XCP-HL, resolved at deploy time from the latest published image release
+ * the official Vates appliance, unchanged upstream behaviour
+ * the Ronivay community image
+ * any custom XVA URL, plain or gzipped, over HTTP or HTTPS
+
+Every source except the Vates one is streamed into XAPI through xoa-proxy,
+which handles gzip decompression and HTTPS, including self-signed
+certificates.
+
+This package replaces the stock xo-lite package. The interface is served by
+XAPI from /opt/xensource/www, as usual.
 
 %prep
 %autosetup -p1
