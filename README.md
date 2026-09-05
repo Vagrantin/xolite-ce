@@ -1,8 +1,18 @@
 # xolite-ce
 
-Packaging for **XO Lite Community / Home-laber Edition** (`xo-lite-ce`), the upstream [XO Lite](https://github.com/vatesfr/xen-orchestra) web UI rebuilt with patches so the "Deploy XOA" button installs a community-built XOA image instead of the Vates appliance.
+Packaging for **XO Lite Community / HomeLab Edition** (`xo-lite-ce`), the upstream
+[XO Lite](https://github.com/vatesfr/xen-orchestra) web UI rebuilt so that "Deploy XOA"
+offers a choice of appliance image rather than a single hardcoded one:
 
-The XVA URL is not hard-coded: it is resolved at runtime from `https://xo-image.yawn.fi/downloads/image.txt`, and the download is streamed through [`xoa-proxy`](../xoa-proxy) (a hard RPM dependency) to handle HTTPS and gzip for XAPI.
+- **XOA-HL** *(default)* - Xen Orchestra built from source for XCP-HL, resolved at
+  deploy time from the latest published image release
+- **Vates image** - the official appliance, unchanged upstream behaviour
+- **Ronivay's image** - resolved from `https://xo-image.yawn.fi/downloads/image.txt`
+- **Custom URL** - any XVA, plain or gzipped, over HTTP or HTTPS
+
+Every source except Vates is streamed into XAPI through [`xoa-proxy`](../xoa-proxy), which handles gzip decompression and HTTPS, including self-signed certificates when the "Verify if ssl certificate is valid" toggle is off.
+The package `Provides:`/`Obsoletes:` the stock `xo-lite`, so it is a drop-in
+replacement on XCP-ng 8.3.
 
 ## Contents
 
