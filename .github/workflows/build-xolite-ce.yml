@@ -329,9 +329,16 @@ jobs:
             ### Verification
             Import the public key before verifying:
             ```
-            rpm --import https://github.com/vagrantin/xolite-ce/raw/main/RPM-GPG-KEY-xcp-ng-ce
-            rpm --checksig xo-lite-community-*.noarch.rpm
+            rpm --import https://github.com/Vagrantin/xolite-ce/raw/main/xcp-ng-ce-public.asc
+            rpm --checksig xo-lite-ce-*.noarch.rpm
             ```
+
+            On XCP-ng 8.3 dom0 this reports `NOKEY`. The RPM is signed by a
+            signing subkey, and dom0's rpm 4.11 registers only the primary key
+            on import. That is expected: on a host, trust runs through the
+            signed `repomd.xml` of the XCP-HL repository instead. The command
+            above verifies the package directly on any distro with rpm 4.13 or
+            newer.
 
             > Community build. Not supported by Vates.
           files: ${{ env.new_rpm }}
