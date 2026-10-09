@@ -27,11 +27,13 @@ replacement on XCP-ng 8.3.
 
 Builds run in CI (GitHub Actions, triggered by [`../buildorchestration`](../buildorchestration)): the upstream tag from `UPSTREAM_TAG` is fetched, patches applied, the Vue app built, and the result packaged with the spec above. The RPM ends up in the community repo consumed by [`../xcp-ng-ce-iso`](../xcp-ng-ce-iso).
 
-## RPM repository (GitHub Pages)
+## RPM repository
 
-Every release is republished as a signed, `yum`-resolvable repository hosted on
-GitHub Pages at <https://vagrantin.github.io/xolite-ce/>, so an installed XCP-HL host
-can `yum update xo-lite-ce` in place instead of reinstalling from the ISO.
+Every release is republished as a signed, `yum`-resolvable repository at
+<https://rpm.xcp-hl.org/xolite-ce/8.3/x86_64/>, built by
+[xcp-hl-rpm](https://github.com/Vagrantin/xcp-hl-rpm) (xcp-hl#190), so an installed XCP-HL host
+can `yum update xo-lite-ce` in place instead of reinstalling from the ISO. The legacy copy at
+<https://vagrantin.github.io/xolite-ce/> stays online until hosts have moved.
 
 ### Recommended: install the whole repository set at once
 
@@ -48,8 +50,8 @@ On an XCP-ng 8.3 host, as root:
 
 ```bash
 curl -L -o /etc/yum.repos.d/xcp-hl.repo \
-  https://vagrantin.github.io/xcp-hl/xcp-hl.repo
-rpm --import https://vagrantin.github.io/xcp-hl/xcp-ng-ce-public.asc
+  https://rpm.xcp-hl.org/xcp-hl.repo
+rpm --import https://rpm.xcp-hl.org/xcp-ng-ce-public.asc
 yum clean all && yum install xcp-hl-release
 yum update xo-lite-ce
 ```
