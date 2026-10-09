@@ -30,6 +30,10 @@
 <h1>XCP-HL yum repository: <code>xo-lite-ce</code></h1>
 <p class="sub">Signed RPM repository for XO Lite, HomeLab Edition. Built for XCP-ng 8.3.</p>
 
+<div class="note"><strong>Moved.</strong> These packages are now served from
+<a href="https://rpm.xcp-hl.org/">rpm.xcp-hl.org</a>. This address stays online during the
+transition; installing or updating <code>xcp-hl-release</code> moves a host to the new one.</div>
+
 <p>This site serves a <code>yum</code>-resolvable repository containing every
 released build of the <code>xo-lite-ce</code> package, so an installed XCP-HL host
 can update in place instead of reinstalling from the ISO.</p>
@@ -39,7 +43,7 @@ can update in place instead of reinstalling from the ISO.</p>
 <pre><code>curl -o /etc/yum.repos.d/xcp-hl-xolite.repo \
   https://vagrantin.github.io/xolite-ce/xcp-hl-xolite.repo
 
-rpm --import https://vagrantin.github.io/xolite-ce/xcp-ng-ce-public.asc
+rpm --import https://rpm.xcp-hl.org/xcp-ng-ce-public.asc
 
 yum clean all
 yum check-update xo-lite-ce</code></pre>
