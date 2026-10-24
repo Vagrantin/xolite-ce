@@ -253,6 +253,15 @@ jobs:
           echo "▶ Built RPM: ${NEW_RPM}"
           rpm -qip "${NEW_RPM}"
 
+      - name: Verify scriptlets contain no unexpanded macros
+        run: |
+          set -euo pipefail
+          scripts=$(rpm -qp --scripts "${new_rpm}")
+          echo "${scripts}"
+          if grep -qE '^[[:space:]]*%' <<<"${scripts}"; then
+            echo "Unexpanded RPM macro in scriptlets"; exit 1
+          fi
+
       # ── 11. Import GPG key and configure for CI ───────────────────────────
       - name: Import GPG signing key
         env:
