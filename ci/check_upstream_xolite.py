@@ -85,8 +85,12 @@ def format_version(version):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--report-only", action="store_true", help="report lag without failing")
+    parser.add_argument("--previous-tag", help="prior pin from the PR base for rollback detection")
     args = parser.parse_args()
     pin = parse_tag(Path("UPSTREAM_TAG").read_text())
+    if args.previous_tag and pin < parse_tag(args.previous_tag):
+        print("::warning::XO Lite pin moved backwards while Obsoletes is unversioned; review xcp-hl#42")
+        return 1
     latest = fetch_latest()
     print(f"XO Lite CE pin: {format_version(pin)}; XCP-ng 8.3 updates: {format_version(latest)}")
     if latest[0] != pin[0] or latest[1] - pin[1] >= 2:
