@@ -1,5 +1,7 @@
 import gzip
 import unittest
+from unittest.mock import patch
+import sys
 
 import check_upstream_xolite as drift
 
@@ -23,6 +25,10 @@ class DriftCheckTests(unittest.TestCase):
             drift.parse_tag("v0.21.0")
         with self.assertRaises(ValueError):
             drift.primary_location(repomd.replace(b"repodata/abc", b"../abc"))
+
+    def test_backwards_pin_fails_before_network_lookup(self):
+        with patch.object(sys, "argv", ["drift", "--report-only", "--previous-tag", "xo-lite-v0.22.0"]):
+            self.assertEqual(drift.main(), 1)
 
 
 if __name__ == "__main__":
