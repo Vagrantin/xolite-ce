@@ -1,0 +1,14 @@
+name: Check login translations
+on:
+  pull_request:
+    paths: ['patches/login-locales.json', 'patches/update-login-locales.py', 'ci/test-login-locales.py', 'UPSTREAM_TAG', '.github/workflows/check-login-locales.yml', '.github/workflows/build-xolite-ce.yml']
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          git clone --depth 1 --branch "$(cat UPSTREAM_TAG)" https://github.com/vatesfr/xen-orchestra.git upstream
+          python3 ci/test-login-locales.py upstream

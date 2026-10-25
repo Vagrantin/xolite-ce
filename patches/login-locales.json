@@ -1,0 +1,69 @@
+{
+  "fa": {
+    "username": "نام کاربری"
+  },
+  "ru": {
+    "username": "Имя пользователя",
+    "keep-me-logged": "Оставаться в системе",
+    "you-are-currently-on": "Сейчас вы подключены к: {0}"
+  },
+  "pt": {
+    "username": "Nome de utilizador"
+  },
+  "da": {
+    "keep-me-logged": "Forbliv logget ind",
+    "login-only-on-master": "Det er kun muligt at logge ind på den primære vært",
+    "password-invalid": "Ugyldig adgangskode"
+  },
+  "fi": {
+    "login": "Kirjaudu sisään",
+    "login-only-on-master": "Kirjautuminen on mahdollista vain ensisijaiselle isännälle",
+    "password-invalid": "Virheellinen salasana",
+    "you-are-currently-on": "Olet tällä hetkellä kohteessa: {0}",
+    "click-to-return-default-pool": "Palaa oletuspooliin napsauttamalla tätä"
+  },
+  "it": {
+    "keep-me-logged": "Resta connesso",
+    "login-only-on-master": "È possibile accedere solo all'host principale"
+  },
+  "pl": {
+    "login": "Zaloguj się",
+    "keep-me-logged": "Pozostań zalogowany",
+    "login-only-on-master": "Logowanie jest możliwe tylko na hoście głównym",
+    "you-are-currently-on": "Obecnie korzystasz z: {0}",
+    "click-to-return-default-pool": "Kliknij tutaj, aby wrócić do domyślnej puli"
+  },
+  "pt-BR": {
+    "password": "Senha",
+    "password-invalid": "Senha inválida",
+    "you-are-currently-on": "Você está atualmente em: {0}"
+  },
+  "uk": {
+    "username": "Ім’я користувача",
+    "login": "Увійти",
+    "keep-me-logged": "Залишатися в системі",
+    "login-only-on-master": "Вхід можливий лише на головному хості",
+    "you-are-currently-on": "Зараз ви підключені до: {0}"
+  },
+  "ja": {
+    "username": "ユーザー名",
+    "login": "ログイン",
+    "keep-me-logged": "ログイン状態を保持する",
+    "login-only-on-master": "プールマスターのホストでのみログインできます",
+    "password-invalid": "パスワードが正しくありません",
+    "error-occurred": "エラーが発生しました",
+    "you-are-currently-on": "現在の接続先: {0}",
+    "click-to-return-default-pool": "クリックして既定のプールに戻る"
+  },
+  "ko": {
+    "username": "사용자 이름",
+    "password": "비밀번호",
+    "login": "로그인",
+    "keep-me-logged": "로그인 상태 유지",
+    "login-only-on-master": "마스터 호스트에서만 로그인할 수 있습니다",
+    "password-invalid": "비밀번호가 올바르지 않습니다",
+    "error-occurred": "오류가 발생했습니다",
+    "you-are-currently-on": "현재 연결된 대상: {0}",
+    "click-to-return-default-pool": "기본 풀로 돌아가려면 여기를 클릭하세요"
+  }
+}
