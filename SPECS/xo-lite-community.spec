@@ -8,7 +8,7 @@ Version: %{_version}
 # produced the patch, since Version alone (the upstream xo-lite version)
 # doesn't identify which patch revision built this RPM.
 Release: %{_release}.g%{_shortcommit}.xcpng8.3%{?dist}
-License: AGPL3-only
+License:        AGPL-3.0-only
 URL:     https://github.com/vatesfr/xen-orchestra
 Provides: xo-lite = %{version}-%{release}
 # Unversioned on purpose: a bounded obsoletes stops matching once upstream
