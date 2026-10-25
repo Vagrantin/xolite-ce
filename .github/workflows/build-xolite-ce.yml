@@ -288,14 +288,11 @@ jobs:
             | awk -F: '/^sec/{print $5}' | head -1)
           echo "▶ Using key ID: ${GPG_KEY_ID}"
     
+          # rpm 6 (ubuntu-26.04 runner) rejects the old argv0-style sign command; its default uses the cached passphrase.
           cat > ~/.rpmmacros <<EOF
           %_signature gpg
           %_gpg_name XCP-ng Community Edition
           %_gpgbin /usr/bin/gpg2
-          %__gpg_sign_cmd %{__gpg} gpg --batch --no-verbose --no-armor \
-            --no-secmem-warning --pinentry-mode loopback \
-            -u "%{_gpg_name}" -sbo %{__signature_filename} \
-            --digest-algo sha256 %{__plaintext_filename}
           EOF
     
           echo "▶ rpmmacros written:"
