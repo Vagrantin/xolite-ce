@@ -1,0 +1,16 @@
+diff --git a/@xen-orchestra/lite/src/components/XoaButton.vue b/@xen-orchestra/lite/src/components/XoaButton.vue
+--- a/@xen-orchestra/lite/src/components/XoaButton.vue
++++ b/@xen-orchestra/lite/src/components/XoaButton.vue
+@@ -69,8 +69,10 @@
+     return
+   }
+ 
+-  return Object.values(xoasInfo.value).reduce((lastXoaInfo, info) =>
+-    lastXoaInfo === undefined || info.lastConnected > lastXoaInfo.lastConnected ? info : lastXoaInfo
++  return Object.values(xoasInfo.value).reduce<ClientInfo | undefined>(
++    (lastXoaInfo, info) =>
++      lastXoaInfo === undefined || info.lastConnected > lastXoaInfo.lastConnected ? info : lastXoaInfo,
++    undefined
+   )
+ })
+ 

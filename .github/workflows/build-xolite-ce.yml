@@ -74,6 +74,9 @@ jobs:
       - name: Apply community patch
         run: |
           cd xen-orchestra
+          git apply --check "$GITHUB_WORKSPACE/patches/xoa-button-empty.patch"
+          git apply "$GITHUB_WORKSPACE/patches/xoa-button-empty.patch"
+          node "$GITHUB_WORKSPACE/ci/test-xoa-button.mjs" "$PWD/@xen-orchestra/lite/src/components/XoaButton.vue"
           
           # Create a symlink so scripts find both @xen-orchestra and patches at the same level
           ln -s "$GITHUB_WORKSPACE/patches" patches

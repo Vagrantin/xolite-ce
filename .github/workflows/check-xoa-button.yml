@@ -1,0 +1,16 @@
+name: Check XOA button patch
+on:
+  pull_request:
+    paths: ['patches/xoa-button-empty.patch', 'ci/test-xoa-button.mjs', 'UPSTREAM_TAG', '.github/workflows/check-xoa-button.yml']
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          git clone --depth 1 --branch "$(cat UPSTREAM_TAG)" https://github.com/vatesfr/xen-orchestra.git upstream
+          git -C upstream apply --check "$GITHUB_WORKSPACE/patches/xoa-button-empty.patch"
+          git -C upstream apply "$GITHUB_WORKSPACE/patches/xoa-button-empty.patch"
+          node ci/test-xoa-button.mjs upstream/@xen-orchestra/lite/src/components/XoaButton.vue
