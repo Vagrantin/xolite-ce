@@ -4,6 +4,9 @@ on:
     paths:
       - 'patches/add-host-versions.py'
       - 'patches/host-versions/**'
+      - 'patches/add-guest-versions.py'
+      - 'patches/guest-versions/**'
+      - 'ci/test-guest-identity*'
       - 'ci/test-host-versions*'
       - 'UPSTREAM_TAG'
       - '.github/workflows/check-host-versions.yml'
@@ -20,12 +23,14 @@ jobs:
         with:
           node-version: '22.16.0'
       - name: Test response handling
-        run: node --experimental-strip-types --test ci/test-host-versions.mjs
+        run: node --experimental-strip-types --test ci/test-host-versions.mjs ci/test-guest-identity.mjs
       - name: Fetch pinned source and test patch guards
         run: |
           git clone --depth 1 --branch "$(cat UPSTREAM_TAG)" https://github.com/vatesfr/xen-orchestra.git upstream
           python3 ci/test-host-versions-patch.py upstream
           python3 patches/add-host-versions.py upstream
+          python3 ci/test-guest-identity-patch.py upstream
+          python3 patches/add-guest-versions.py upstream
       - name: Enable Corepack
         run: corepack enable
       - name: Install pinned upstream dependencies
