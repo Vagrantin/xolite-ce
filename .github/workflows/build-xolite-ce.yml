@@ -313,10 +313,12 @@ jobs:
       # ── 13. Verify RPM signature ──────────────────────────────────────────
       - name: Verify RPM signature
         run: |
-          rpm --import "$GITHUB_WORKSPACE/xcp-ng-ce-public.asc"
+          # The runner user cannot write the system rpmdb; verify against a private one.
+          rpmdb_dir=$(mktemp -d)
+          rpm --dbpath "${rpmdb_dir}" --import "$GITHUB_WORKSPACE/xcp-ng-ce-public.asc"
           echo "── RPM signature check ──────────────────────────────────────"
-          rpm --checksig "${new_rpm}"
-          rpm --checksig "${new_rpm}" | grep -q "digests signatures OK" \
+          rpm --dbpath "${rpmdb_dir}" --checksig "${new_rpm}"
+          rpm --dbpath "${rpmdb_dir}" --checksig "${new_rpm}" | grep -q "digests signatures OK" \
             || (echo "❌ GPG signature missing from RPM"; exit 1)
           echo "✅ RPM signature verified"
 
