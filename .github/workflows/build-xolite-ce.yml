@@ -92,6 +92,8 @@ jobs:
           echo "── Running xoa-deploy-patcher (Rust tool) ──"
           chmod +x patches/xoa-deploy-patcher
           ./patches/xoa-deploy-patcher @xen-orchestra/lite/src/pages/xoa-deploy.vue
+          python3 patches/cleanup-deploy-secrets.py @xen-orchestra/lite/src/pages/xoa-deploy.vue
+          node "$GITHUB_WORKSPACE/ci/test-deploy-secrets.mjs" @xen-orchestra/lite/src/pages/xoa-deploy.vue
           
           echo "▶ Patch pipeline execution complete. Modified files:"
           git status --short
