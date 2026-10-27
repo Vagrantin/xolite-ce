@@ -1,0 +1,24 @@
+name: Check Japanese pool dashboard translations
+on:
+  pull_request:
+    paths:
+      - 'patches/ja-pool-dashboard.json'
+      - 'patches/update-ja-pool-dashboard.py'
+      - 'patches/update-login-locales.py'
+      - 'patches/login-locales.json'
+      - 'patches/update_locales.sh'
+      - 'patches/en-hl.json'
+      - 'ci/test-ja-pool-dashboard.py'
+      - 'UPSTREAM_TAG'
+      - '.github/workflows/check-ja-pool-dashboard.yml'
+      - '.github/workflows/build-xolite-ce.yml'
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          git clone --depth 1 --branch "$(cat UPSTREAM_TAG)" https://github.com/vatesfr/xen-orchestra.git upstream
+          python3 ci/test-ja-pool-dashboard.py upstream
