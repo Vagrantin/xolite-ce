@@ -41,7 +41,7 @@ jobs:
       - name: Install system tools
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y rpm rpm2cpio gnupg2
+          sudo apt-get install -y rpm rpm2cpio cpio gnupg2
 
       # ── 2. Clone vatesfr/xen-orchestra at the *pinned* xo-lite-v* tag ─────
       # The pin lives in the UPSTREAM_TAG file at the repo root, so builds only

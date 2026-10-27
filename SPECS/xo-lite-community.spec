@@ -56,6 +56,7 @@ rm %{buildroot}/opt/xensource/www/LICENSE \
    %{buildroot}/opt/xensource/www/CHANGELOG.md
 
 %files
+%dir %{_licensedir}/%{name}
 %license LICENSE
 %license %{_licensedir}/%{name}/PROJECT-LICENSE
 %doc CHANGELOG.md
