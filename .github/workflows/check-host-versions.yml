@@ -1,0 +1,36 @@
+name: Check host version display
+on:
+  pull_request:
+    paths:
+      - 'patches/add-host-versions.py'
+      - 'patches/host-versions/**'
+      - 'ci/test-host-versions*'
+      - 'UPSTREAM_TAG'
+      - '.github/workflows/check-host-versions.yml'
+      - '.github/workflows/build-xolite-ce.yml'
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+      - name: Test response handling
+        run: node --experimental-strip-types --test ci/test-host-versions.mjs
+      - name: Fetch pinned source and test patch guards
+        run: |
+          git clone --depth 1 --branch "$(cat UPSTREAM_TAG)" https://github.com/vatesfr/xen-orchestra.git upstream
+          python3 ci/test-host-versions-patch.py upstream
+          python3 patches/add-host-versions.py upstream
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Install pinned upstream dependencies
+        working-directory: upstream
+        run: yarn install --frozen-lockfile
+      - name: Build XO Lite with the version display
+        working-directory: upstream
+        run: TURBO_TELEMETRY_DISABLED=1 yarn build:xo-lite
