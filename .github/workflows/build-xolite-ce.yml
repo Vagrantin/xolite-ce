@@ -84,6 +84,7 @@ jobs:
           echo "── Running update_locales.sh ──"
           bash patches/update_locales.sh
           python3 patches/update-login-locales.py .
+          python3 patches/update-ja-pool-dashboard.py .
           
           echo "── Running update-xolite-loader.sh ──"
           bash patches/update-xolite-loader.sh
@@ -357,3 +358,4 @@ jobs:
           draft: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
