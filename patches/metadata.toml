@@ -1,0 +1,19 @@
+[[patches]]
+id = "xoa-button-empty"
+description = "Handle an empty connected-appliance list"
+target = "@xen-orchestra/lite/src/components/XoaButton.vue"
+upstream_commit = "13f987ff3d34504a90b89178489e15fa2293d1b3"
+applies_to = ["xo-lite-v0.21.0"]
+maintainer = "vagrantin"
+status = "active"
+dependencies = []
+
+[[patches]]
+id = "010-xoa-deploy"
+description = "Preserve deploy transformations previously embedded in the Rust executable"
+target = "@xen-orchestra/lite/src/pages/xoa-deploy.vue"
+upstream_commit = "13f987ff3d34504a90b89178489e15fa2293d1b3"
+applies_to = ["xo-lite-v0.21.0"]
+maintainer = "vagrantin"
+status = "active"
+dependencies = []

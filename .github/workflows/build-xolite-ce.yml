@@ -73,32 +73,10 @@ jobs:
       # ── 4. Apply community patch via modular patch pipeline ──────────────
       - name: Apply community patch
         run: |
+          bash scripts/patch-source.sh xen-orchestra
+          node ci/test-xoa-button.mjs xen-orchestra/@xen-orchestra/lite/src/components/XoaButton.vue
+          node ci/test-deploy-secrets.mjs xen-orchestra/@xen-orchestra/lite/src/pages/xoa-deploy.vue
           cd xen-orchestra
-          git apply --check "$GITHUB_WORKSPACE/patches/xoa-button-empty.patch"
-          git apply "$GITHUB_WORKSPACE/patches/xoa-button-empty.patch"
-          node "$GITHUB_WORKSPACE/ci/test-xoa-button.mjs" "$PWD/@xen-orchestra/lite/src/components/XoaButton.vue"
-          
-          # Create a symlink so scripts find both @xen-orchestra and patches at the same level
-          ln -s "$GITHUB_WORKSPACE/patches" patches
-          
-          echo "── Running update_locales.sh ──"
-          bash patches/update_locales.sh
-          python3 patches/update-login-locales.py .
-          python3 patches/update-ja-pool-dashboard.py .
-          python3 patches/add-host-versions.py .
-          python3 patches/add-guest-versions.py .
-          
-          echo "── Running update-xolite-loader.sh ──"
-          bash patches/update-xolite-loader.sh
-          
-          echo "── Running xoa-deploy-patcher (Rust tool) ──"
-          chmod +x patches/xoa-deploy-patcher
-          ./patches/xoa-deploy-patcher @xen-orchestra/lite/src/pages/xoa-deploy.vue
-          python3 patches/cleanup-deploy-secrets.py @xen-orchestra/lite/src/pages/xoa-deploy.vue
-          node "$GITHUB_WORKSPACE/ci/test-deploy-secrets.mjs" @xen-orchestra/lite/src/pages/xoa-deploy.vue
-          
-          echo "▶ Patch pipeline execution complete. Modified files:"
-          git status --short
           echo "Add robots.txt for version prior to v0.22.0"
           XOLITEVERSION="${{steps.xo-version.outputs.version}}"
           if dpkg --compare-versions "$XOLITEVERSION" lt "0.22.0"; then

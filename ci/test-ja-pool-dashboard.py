@@ -93,5 +93,7 @@ with tempfile.TemporaryDirectory() as directory:
         assert (locales / 'ja.json').read_bytes() == applied, 'Validation must precede writes'
 
 workflow = (repo / '.github/workflows/build-xolite-ce.yml').read_text()
-assert workflow.index('python3 patches/update-login-locales.py .') < workflow.index('python3 patches/update-ja-pool-dashboard.py .') < workflow.index('- name: Build XO Lite')
+pipeline = (repo / 'scripts/patch-source.sh').read_text()
+assert pipeline.index('python3 patches/update-login-locales.py .') < pipeline.index('python3 patches/update-ja-pool-dashboard.py .')
+assert workflow.index('bash scripts/patch-source.sh xen-orchestra') < workflow.index('- name: Build XO Lite')
 print(f'Japanese dashboard: {len(keys)} consumer keys, links, placeholders, scope and patch sequence passed')
