@@ -1,3 +1,6 @@
+# XCP-ng 8.3 dom0 uses RPM 4.11 and cannot read a zstd payload.
+%global _binary_payload w2.xzdio
+
 Summary: Xen Orchestra Lite for XCP-ng HomeLab Edition
 Name:    xo-lite-ce
 Version: %{_version}
@@ -20,6 +23,7 @@ Requires: xcp-hl-release
 BuildArch: noarch
 
 Source0: xo-lite-ce-%{version}.tar.gz
+Source1: xo-lite-ce-LICENSE
 
 %description
 Xen Orchestra Lite, customised for XCP-ng HomeLab Edition (XCP-HL).
@@ -44,13 +48,17 @@ XAPI from /opt/xensource/www, as usual.
 %autosetup -p1
 
 %install
+install -d -m 755 %{buildroot}%{_licensedir}/%{name}
+install -m 644 %{SOURCE1} %{buildroot}%{_licensedir}/%{name}/PROJECT-LICENSE
 install -d -m 755 %{buildroot}/opt/xensource/www
 cp -a * %{buildroot}/opt/xensource/www
 rm %{buildroot}/opt/xensource/www/LICENSE \
    %{buildroot}/opt/xensource/www/CHANGELOG.md
 
 %files
+%dir %{_licensedir}/%{name}
 %license LICENSE
+%license %{_licensedir}/%{name}/PROJECT-LICENSE
 %doc CHANGELOG.md
 /opt/xensource/www/assets
 /opt/xensource/www/robots.txt

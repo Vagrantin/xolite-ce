@@ -41,7 +41,7 @@ jobs:
       - name: Install system tools
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y rpm rpm2cpio gnupg2
+          sudo apt-get install -y rpm rpm2cpio cpio gnupg2
 
       # ── 2. Clone vatesfr/xen-orchestra at the *pinned* xo-lite-v* tag ─────
       # The pin lives in the UPSTREAM_TAG file at the repo root, so builds only
@@ -231,6 +231,7 @@ jobs:
           VERSION="${{ steps.xo-version.outputs.version }}"
           cp "xo-lite-${VERSION}.tar.gz" ~/rpmbuild/SOURCES/xo-lite-ce-${VERSION}.tar.gz
           cp "$GITHUB_WORKSPACE/SPECS/xo-lite-community.spec" ~/rpmbuild/SPECS/
+          cp "$GITHUB_WORKSPACE/LICENSE" ~/rpmbuild/SOURCES/xo-lite-ce-LICENSE
 
           # Put the ce counter from the release tag (vX.Y.Z-ceN → N) into the
           # RPM Release field so every ce build has a distinct NEVRA — with a
@@ -259,6 +260,9 @@ jobs:
           echo "new_rpm=${NEW_RPM}" >> $GITHUB_ENV
           echo "▶ Built RPM: ${NEW_RPM}"
           rpm -qip "${NEW_RPM}"
+
+      - name: Verify dom0 payload compression and project license
+        run: bash ci/check-rpm-payload.sh "${new_rpm}" LICENSE
 
       - name: Verify scriptlets contain no unexpanded macros
         run: |

@@ -1,0 +1,22 @@
+name: Check dom0 RPM payload
+on:
+  pull_request:
+    paths:
+      - 'SPECS/xo-lite-community.spec'
+      - 'LICENSE'
+      - 'ci/check-rpm-payload.sh'
+      - 'ci/test-rpm-package.sh'
+      - '.github/workflows/check-rpm-package.yml'
+      - '.github/workflows/build-xolite-ce.yml'
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install RPM inspection and build tools
+        run: sudo apt-get update -qq && sudo apt-get install -y rpm rpm2cpio cpio
+      - name: Build and inspect the real spec with a UI packaging fixture
+        run: bash ci/test-rpm-package.sh
