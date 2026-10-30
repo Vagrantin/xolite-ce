@@ -85,6 +85,8 @@ jobs:
           bash patches/update_locales.sh
           python3 patches/update-login-locales.py .
           python3 patches/update-ja-pool-dashboard.py .
+          python3 patches/add-host-versions.py .
+          python3 patches/add-guest-versions.py .
           
           echo "── Running update-xolite-loader.sh ──"
           bash patches/update-xolite-loader.sh
