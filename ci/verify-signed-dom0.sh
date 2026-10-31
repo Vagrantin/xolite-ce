@@ -19,7 +19,7 @@ for rpm_file in /signing/*.rpm; do
 
     legacy_sig=$(rpm --dbpath "${rpmdb}" -Kv "${rpm_file}")
     echo "${legacy_sig}"
-    printf '%s\n' "${legacy_sig}" | grep -qiE '^Header .*signature' \
+    printf '%s\n' "${legacy_sig}" | grep -qiE 'Header .*[Ss]ignature' \
         || { echo "❌ no legacy header signature; rpm 4.11 (dom0) sees this package as unsigned"; exit 1; }
 done
 echo "✅ signature readable by rpm 4.x header format"
