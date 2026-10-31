@@ -18,7 +18,8 @@ replacement on XCP-ng 8.3.
 
 - `UPSTREAM_TAG`: the upstream xen-orchestra tag the build is pinned to (currently `xo-lite-v0.21.0`).
 - `SPECS/xo-lite-community.spec`: RPM spec. Installs to `/opt/xensource/www`, `Provides:`/`Obsoletes:` the stock `xo-lite` so it's a drop-in replacement on XCP-ng 8.3. The release counter is rewritten by CI from the `vX.Y.Z-ceN` tag so every CE build has a distinct, upgradeable NEVRA.
-- `patches/xoa-deploy-patcher`: vendored Rust tool (source at [`../xoa-deploy-patcher`](../xoa-deploy-patcher)) that applies landmark-based patches to `xoa-deploy.vue` at build time and fails the build if upstream drifted.
+- `patches/series` and `patches/metadata.toml`: ordered, reviewable unified diffs and ownership metadata.
+- `scripts/patch-source.sh`: shared build and validation pipeline. See [patch maintenance](docs/patching.md) for checks and migration provenance.
 - `patches/en-hl.json`, `patches/update_locales.sh`: Home-laber Edition locale strings.
 - `patches/xolite-loader.html`, `patches/update-xolite-loader.sh`: replacement loader page (removes the `lite.xen-orchestra.com` remote-loading fallback).
 - `xcp-ng-ce-public.asc`: public key used to sign the community RPM repo.

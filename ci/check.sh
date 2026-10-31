@@ -12,6 +12,10 @@ step() { echo "==> $1"; echo "$1" > "$OUT/current-step"; }
 step "shellcheck (warnings and errors)"
 git ls-files -z '*.sh' | xargs -0 shellcheck -S warning
 
+step "patch series and failure guards"
+python3 scripts/list-patches.py patches
+python3 ci/test-patch-series.py
+
 step "en-hl.json: an object of strings"
 jq -e 'type == "object" and ([.[] | type] | all(. == "string"))' patches/en-hl.json >/dev/null
 

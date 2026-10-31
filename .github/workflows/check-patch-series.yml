@@ -1,0 +1,85 @@
+name: Check unified patch pipeline
+on:
+  pull_request:
+    paths:
+      - 'patches/**'
+      - 'scripts/**'
+      - 'ci/test-patch-*.py'
+      - 'docs/patch-migration.json'
+      - 'UPSTREAM_TAG'
+      - '.github/workflows/check-patch-series.yml'
+      - '.github/workflows/build-xolite-ce.yml'
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '^22.13'
+      - name: Validate series and failure guards
+        run: |
+          python3 scripts/list-patches.py patches
+          python3 ci/test-patch-series.py
+      - name: Fetch immutable legacy consumer
+        uses: actions/checkout@v4
+        with:
+          repository: Vagrantin/xolite-ce
+          ref: d452937459c56d8b9df1f59b1c96cb0c13562307
+          path: .legacy-consumer
+          persist-credentials: false
+      - name: Fetch immutable patcher source
+        uses: actions/checkout@v4
+        with:
+          repository: Vagrantin/xoa-deploy-patcher
+          ref: dbd7c88816d7b724aaf0124bce5168c4d700dea1
+          path: .legacy-patcher
+          persist-credentials: false
+      - name: Select Rust toolchain for the provenance rebuild
+        run: rustup toolchain install 1.85.0 --profile minimal
+      - name: Rebuild pinned source for behavioral provenance
+        run: cargo +1.85.0 build --locked --release --manifest-path .legacy-patcher/Cargo.toml
+      - name: Compare complete pipelines on pinned source
+        run: |
+          git clone --depth 1 --branch "$(cat UPSTREAM_TAG)" https://github.com/vatesfr/xen-orchestra.git upstream
+          python3 ci/test-patch-migration.py upstream .legacy-consumer .legacy-patcher \
+            --rebuilt-binary .legacy-patcher/target/release/xoa-deploy-patcher \
+            --report patch-migration-result.json
+      - name: Preserve migration evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: patch-migration-result
+          path: patch-migration-result.json
+      - name: Test and apply the complete current pipeline
+        run: |
+          python3 ci/test-login-locales.py upstream
+          python3 ci/test-ja-pool-dashboard.py upstream
+          python3 ci/test-host-versions-patch.py upstream
+          python3 ci/test-guest-identity-patch.py upstream
+          node --experimental-strip-types --test ci/test-host-versions.mjs ci/test-guest-identity.mjs
+          bash scripts/patch-source.sh upstream
+          node ci/test-xoa-button.mjs upstream/@xen-orchestra/lite/src/components/XoaButton.vue
+          node ci/test-deploy-secrets.mjs upstream/@xen-orchestra/lite/src/pages/xoa-deploy.vue
+          if grep -r --exclude=release.mjs 'lite\.xen-orchestra\.com' upstream/@xen-orchestra/lite/scripts/; then
+            exit 1
+          fi
+          grep -r -q 'xo-image' upstream/@xen-orchestra/lite/src/
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Install pinned dependencies
+        working-directory: upstream
+        run: yarn install --frozen-lockfile
+      - name: Build patched XO Lite
+        working-directory: upstream
+        run: TURBO_TELEMETRY_DISABLED=1 yarn build:xo-lite
+      - name: Check built output
+        run: |
+          dist=upstream/@xen-orchestra/lite/dist
+          test -f "$dist/index.html"
+          test -d "$dist/assets"
+          grep -Irl 'xoa\.io' "$dist"
+          grep -Irl 'xo-image' "$dist"
+          if grep -Irl 'lite\.xen-orchestra\.com' "$dist"; then exit 1; fi

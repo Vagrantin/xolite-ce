@@ -1,0 +1,14 @@
+{
+  "legacy_repository": "Vagrantin/xolite-ce",
+  "legacy_commit": "d452937459c56d8b9df1f59b1c96cb0c13562307",
+  "legacy_binary_path": "patches/xoa-deploy-patcher",
+  "legacy_binary_sha256": "1e13735c3e65b468b0b99a3904d930d70bec2d07c9abb7d93b802b1f90a4169f",
+  "source_repository": "Vagrantin/xoa-deploy-patcher",
+  "source_commit": "dbd7c88816d7b724aaf0124bce5168c4d700dea1",
+  "source_path": "src/main.rs",
+  "source_sha256": "274438bbdd3f823152c433c73dfb5d2d80511cd65dbae3f676b5d86594475f66",
+  "upstream_tag": "xo-lite-v0.21.0",
+  "upstream_commit": "13f987ff3d34504a90b89178489e15fa2293d1b3",
+  "deploy_before_sha256": "d12e3943d05fcea20b907119389ef2a4d3f82b76d35bb23082363981a82f2d30",
+  "deploy_after_sha256": "bb9d31ef67d91e2973e3f234b0fa72b50d76f2ef19da7bb8be20d53555750c27"
+}
