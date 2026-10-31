@@ -273,43 +273,44 @@ jobs:
             -u "XCP-ng Community Edition" \
             --sign --output /dev/null /dev/null
 
-      - name: Configure rpmmacros
+      # ── 12. Sign RPM with a dom0-readable signature format ────────────────
+      # rpm 6 on the runner writes only the new OpenPGP signature tag, which
+      # dom0's rpm 4.11 cannot see: ce35-37 shipped effectively unsigned.
+      # Sign in rockylinux:9 instead, like the xcp-hl-release RPM.
+      - name: Export GPG private key for container
+        env:
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
-          GPG_KEY_ID=$(gpg --list-secret-keys --with-colons \
-            | awk -F: '/^sec/{print $5}' | head -1)
-          echo "▶ Using key ID: ${GPG_KEY_ID}"
-    
-          # rpm 6 (ubuntu-26.04 runner) rejects the old argv0-style sign command; its default uses the cached passphrase.
-          cat > ~/.rpmmacros <<EOF
-          %_signature gpg
-          %_gpg_name XCP-ng Community Edition
-          %_gpgbin /usr/bin/gpg2
-          EOF
-    
-          echo "▶ rpmmacros written:"
-          cat ~/.rpmmacros
-      
-      # ── 12. Sign RPM ──────────────────────────────────────────────────────
-      - name: Sign community RPM
-        run: |
-          rpmsign --addsign \
-            --define "_gpg_name XCP-ng Community Edition" \
-            "${new_rpm}"
-          echo "RPM signed: ${new_rpm}"
+          set -euo pipefail
+          gpg --batch --pinentry-mode loopback \
+            --passphrase "${GPG_PASSPHRASE}" \
+            --export-secret-keys "XCP-ng Community Edition" \
+            > /tmp/xolite-signing.key
+          chmod 600 /tmp/xolite-signing.key
+          test -s /tmp/xolite-signing.key
 
-      # ── 13. Verify RPM signature ──────────────────────────────────────────
-      - name: Verify RPM signature
+      - name: Sign and verify RPM in EL9 container
+        env:
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
-          # The runner user cannot write the system rpmdb; verify against a private one.
-          rpmdb_dir=$(mktemp -d)
-          rpm --dbpath "${rpmdb_dir}" --import "$GITHUB_WORKSPACE/xcp-ng-ce-public.asc"
-          echo "── RPM signature check ──────────────────────────────────────"
-          rpm --dbpath "${rpmdb_dir}" --checksig "${new_rpm}"
-          rpm --dbpath "${rpmdb_dir}" --checksig "${new_rpm}" | grep -q "digests signatures OK" \
-            || (echo "❌ GPG signature missing from RPM"; exit 1)
-          echo "✅ RPM signature verified"
+          set -euo pipefail
+          SIGN_DIR=$(dirname "${new_rpm}")
+          docker run --rm \
+            --user root \
+            -e "GPG_PASSPHRASE=${GPG_PASSPHRASE}" \
+            -v /tmp/xolite-signing.key:/signing.key:ro \
+            -v "${SIGN_DIR}:/signing" \
+            -v "$GITHUB_WORKSPACE/ci/sign-rpm.sh:/sign-rpm.sh:ro" \
+            rockylinux:9 bash /sign-rpm.sh
 
-      # ── 14. Publish signed RPM as GitHub Release ──────────────────────────
+          docker run --rm \
+            --user root \
+            -v "$GITHUB_WORKSPACE/xcp-ng-ce-public.asc:/pubkey.asc:ro" \
+            -v "${SIGN_DIR}:/signing:ro" \
+            -v "$GITHUB_WORKSPACE/ci/verify-signed-dom0.sh:/verify.sh:ro" \
+            rockylinux:9 bash /verify.sh
+
+      # ── 13. Publish signed RPM as GitHub Release ───────────────────────
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
