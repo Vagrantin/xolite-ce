@@ -18,13 +18,13 @@ tar -czf "$top/SOURCES/xo-lite-ce-0.21.0.tar.gz" -C "$tmp" xo-lite-ce-0.21.0
 
 # Same environment as the real build: the runner's rpm 6 declares
 # rpmlib(LargeFiles), which dom0's rpm 4.11 rejects.
-docker run --rm --user "$(id -u):$(id -g)" \
-  -e HOME=/tmp \
+docker run --rm --user root \
   -v "$top:/root/rpmbuild" \
   rockylinux:9 \
   bash -c 'dnf -y -q install rpm-build && rpmbuild -bb /root/rpmbuild/SPECS/xo-lite-community.spec \
   --define "_topdir /root/rpmbuild" \
   --define "_version 0.21.0" --define "_release 0" --define "_shortcommit fixture"'
+sudo chown -R "$(id -u):$(id -g)" "$top"
 mapfile -t rpms < <(find "$top/RPMS" -type f -name '*.rpm')
 [[ ${#rpms[@]} -eq 1 ]]
 bash "$repo/ci/check-rpm-payload.sh" "${rpms[0]}" "$repo/LICENSE"

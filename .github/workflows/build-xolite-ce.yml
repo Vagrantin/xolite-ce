@@ -234,8 +234,7 @@ jobs:
       - name: Build RPM in EL9 container
         run: |
           docker run --rm \
-            --user "$(id -u):$(id -g)" \
-            -e HOME=/tmp \
+            --user root \
             -v "$HOME/rpmbuild:/root/rpmbuild" \
             -e "VERSION=${VERSION}" \
             -e "CE_COUNTER=${CE_COUNTER}" \
@@ -247,6 +246,7 @@ jobs:
               --define "_version ${VERSION}" \
               --define "_release ${CE_COUNTER}" \
               --define "_shortcommit ${SHORT_SHA}"'
+          sudo chown -R "$(id -u):$(id -g)" "$HOME/rpmbuild"
 
           NEW_RPM=$(find ~/rpmbuild/RPMS/noarch/ -name "xo-lite-ce-*.rpm" | head -1)
           echo "new_rpm=${NEW_RPM}" >> $GITHUB_ENV
