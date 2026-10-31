@@ -5,6 +5,11 @@ rpm_path=${1:?RPM required}
 project_license=${2:?project LICENSE required}
 compressor=$(rpm -qp --qf '%{PAYLOADCOMPRESSOR}' "$rpm_path")
 [[ "$compressor" == xz ]] || { echo "dom0 requires xz, got $compressor" >&2; exit 1; }
+# Dom0 rpm 4.11 rejects rpmlib(LargeFiles); some rpms inject it at build time.
+if rpm -qp --requires "$rpm_path" 2>/dev/null | grep -q 'rpmlib(LargeFiles)'; then
+  echo "RPM declares rpmlib(LargeFiles), which XCP-ng 8.3 dom0 rejects" >&2
+  exit 1
+fi
 [[ $(rpm -qp --qf '%{NAME}' "$rpm_path") == xo-lite-ce ]]
 [[ $(rpm -qp --qf '%{LICENSE}' "$rpm_path") == AGPL-3.0-only ]]
 license_path=/usr/share/licenses/xo-lite-ce/PROJECT-LICENSE

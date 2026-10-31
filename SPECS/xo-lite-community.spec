@@ -10,7 +10,7 @@ Version: %{_version}
 # upgradeable NEVRA; g<shortcommit> is the xolite-ce repo commit that
 # produced the patch, since Version alone (the upstream xo-lite version)
 # doesn't identify which patch revision built this RPM.
-Release: %{_release}.g%{_shortcommit}.xcpng8.3%{?dist}
+Release: %{_release}.g%{_shortcommit}.xcpng8.3
 License:        AGPL-3.0-only
 URL:     https://github.com/vatesfr/xen-orchestra
 Provides: xo-lite = %{version}-%{release}
