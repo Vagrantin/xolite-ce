@@ -228,13 +228,24 @@ jobs:
           echo "SHORT_SHA=${SHORT_SHA}"     >> $GITHUB_ENV
           echo "▶ RPM Version/Release: ${VERSION} / ${CE_COUNTER}.g${SHORT_SHA}.xcpng8.3"
 
-      - name: Build RPM
+      # The runner's rpm 6 declares rpmlib(LargeFiles) on every package,
+      # which dom0's rpm 4.11 rejects during yum install ("Error installing
+      # packages"). Build with the EL9 rpm 4.14 that xcp-hl-release uses.
+      - name: Build RPM in EL9 container
         run: |
-          rpmbuild -ba ~/rpmbuild/SPECS/xo-lite-community.spec \
-            --define "_topdir $HOME/rpmbuild" \
-            --define "_version ${VERSION}" \
-            --define "_release ${CE_COUNTER}" \
-            --define "_shortcommit ${SHORT_SHA}"
+          docker run --rm \
+            --user root \
+            -v "$HOME/rpmbuild:/root/rpmbuild" \
+            -e "VERSION=${VERSION}" \
+            -e "CE_COUNTER=${CE_COUNTER}" \
+            -e "SHORT_SHA=${SHORT_SHA}" \
+            rockylinux:9 \
+            bash -c 'dnf -y -q install rpm-build && rpmbuild -ba \
+              /root/rpmbuild/SPECS/xo-lite-community.spec \
+              --define "_topdir /root/rpmbuild" \
+              --define "_version ${VERSION}" \
+              --define "_release ${CE_COUNTER}" \
+              --define "_shortcommit ${SHORT_SHA}"'
 
           NEW_RPM=$(find ~/rpmbuild/RPMS/noarch/ -name "xo-lite-ce-*.rpm" | head -1)
           echo "new_rpm=${NEW_RPM}" >> $GITHUB_ENV
