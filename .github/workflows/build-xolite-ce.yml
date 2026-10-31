@@ -234,7 +234,8 @@ jobs:
       - name: Build RPM in EL9 container
         run: |
           docker run --rm \
-            --user root \
+            --user "$(id -u):$(id -g)" \
+            -e HOME=/tmp \
             -v "$HOME/rpmbuild:/root/rpmbuild" \
             -e "VERSION=${VERSION}" \
             -e "CE_COUNTER=${CE_COUNTER}" \
